@@ -1,7 +1,6 @@
 import json
 import logging
 import time
-from datetime import datetime
 from threading import Lock
 
 import jwt
@@ -387,7 +386,7 @@ class HaricaClient:
 
         group = groups[0]
         group_id = group["id"]
-        group_domains = group["domains"]  # Not used, but kept for potential future use
+        # group_domains = group["domains"]  # Not used, but kept for potential future use
 
         # Step 2: Get the validity of the domains associated with the group
         domain_validities = self.__make_post_request(
@@ -401,7 +400,7 @@ class HaricaClient:
         for item in domain_validities:
             domain_id = item["organizationId"]
             domain_name = item["domain"]
-            domain_validity = datetime.fromisoformat(item["validity"])
+            # domain_validity = datetime.fromisoformat(item["validity"])
 
             # If the domain is in the provided list, add its ID to the list for validation
             if domain_name in domains:

@@ -20,7 +20,6 @@ from dateutil import parser
 from tabulate import tabulate
 
 from .harica_client import HaricaClient
-from pprint import pprint
 
 # Set up logging
 logger = logging.getLogger()
@@ -361,14 +360,14 @@ def main():
     approve_certificate_cmd.add_argument("--id", required=True, help="ID of the certificate to approve.")
 
     # Command to get user profile
-    whoami_cmd = subparser.add_parser("whoami", help="Get logged in user profile")
+    subparser.add_parser("whoami", help="Get logged in user profile")
 
     # Command to create validation token
     validate_domains_cmd = subparser.add_parser("validate", help="Create validation token for domains")
     validate_domains_cmd.add_argument("--domains", required=True, help="Comma separated list of domains.")
 
     # Command to list domains validation token
-    list_domains_cmd = subparser.add_parser("domains", help="List available domains")
+    subparser.add_parser("domains", help="List available domains")
 
     args = parser.parse_args()
 

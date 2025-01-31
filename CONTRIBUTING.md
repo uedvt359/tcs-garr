@@ -32,7 +32,7 @@ We welcome feature suggestions! To suggest a new feature, please open an issue o
 1. **Clone the Repository**:
 
     ```sh
-    git clone git@gitlab.dir.garr.it:systemsupport/harica/harica-cli.git
+    git clone <this_repository>
     cd harica
     ```
 
@@ -65,7 +65,7 @@ We welcome feature suggestions! To suggest a new feature, please open an issue o
 
 Ensure you have the following installed:
 
-- Python 3.7+
+- Python 3.9+
 - Git
 - Poetry
 
@@ -82,7 +82,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 1. **Clone the repository**:
 
     ```sh
-    git clone git@gitlab.dir.garr.it:systemsupport/harica/harica-cli.git
+    git clone <this_repository>
     cd harica
     ```
 

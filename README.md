@@ -1,21 +1,33 @@
 # Harica Client
 
+![Version](https://img.shields.io/badge/Version-0.2.1-brightgreen.svg)
+
+[![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
+
+[![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+![Contributions welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)
+
 ## Overview
 
-The `Harica Client` is a command-line tool to manage and interact with certificates in the Harica platform. It provides functionalities like listing certificates, downloading them, issuing new ones, approving requests, and generating validation tokens for domains, all through the Harica API.
+The `Harica Client` is a command-line tool for managing and interacting with certificates on the Harica platform. It offers features like listing, downloading, issuing certificates, approving requests, and generating domain validation tokens, all via the Harica API.
+
+## Warning ⚠️
+
+**Consortium GARR provides this code to the community for sharing purposes but does not commit to providing support, maintenance, or further development of the code. Use it at your own discretion.**
 
 ### Prerequisites
 
 Before using the Harica client, please ensure the following:
 
 1. **Create a local account on the Harica platform**: You must create a local account on Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM credentials, as they do not support API access.
-   
-   - If you're already logged in with federated IDEM credentials, you can create a new local account using the email address in the format `<username_or_surname>@garr.it`. Federated users do not have a password and therefore cannot use the API.
+
+   - If you're already logged in with federated IDEM credentials, you can create a new local account using an email alias. Federated users do not have a password and therefore cannot use the API.
 
 2. **Administrator Permissions**: To use the API, your local account must have administrator permissions. To obtain these:
-   
+
    - **Enable 2FA (Two-Factor Authentication)** on your profile page.
-   - Write down the TOTP seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
+   - Save the TOTP seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
    - After enabling 2FA, request an existing administrator to elevate your account to Administrator privileges.
 
 Once these steps are completed, you are ready to use the Harica client.
@@ -44,7 +56,7 @@ You can install the Harica package in a virtual environment or via `pipx`.
 3. Install the package
 
     ```bash
-    pip install harica --index-url https://gitlab.dir.garr.it/api/v4/projects/1091/packages/pypi/simple
+    pip install harica
     ```
 
 ### Pipx
@@ -52,7 +64,7 @@ You can install the Harica package in a virtual environment or via `pipx`.
 1. Open a terminal and install the package
 
     ```bash
-    PIPX_BIN_DIR=/usr/local/bin pipx install harica --index-url https://gitlab.dir.garr.it/api/v4/projects/1091/packages/pypi/simple
+    PIPX_BIN_DIR=/usr/local/bin pipx install harica
     ```
 
 ## Configuration
@@ -75,7 +87,7 @@ Once the setup is complete, you can use the Harica client for various operations
 harica [command] [options]
 ```
 
-To get full help:
+To view all available commands and options:
 
 ```bash
 harica --help
@@ -102,7 +114,7 @@ options:
 
 ### Available Commands
 
-1. **Initialize the configuration**:
+1. **Initialize configuration**:
 
    ```bash
    harica init
@@ -121,7 +133,7 @@ options:
 
    ```bash
    harica list --help
-   
+
    usage: harica list [-h] [--since SINCE] [--to TO]
 
     options:
@@ -154,7 +166,7 @@ options:
 5. **Request a new certificate**:
 
    ```bash
-   harica request --help 
+   harica request --help
 
    usage: harica request [-h] [--alt_names ALT_NAMES] --cn CN
 
@@ -191,6 +203,10 @@ options:
    ```
 
    This command generates validation tokens for the specified domains. Replace `DOMAINS` with a comma-separated list of domains you need to validate.
+
+## License
+
+This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
 
 ## Contributing and Further Development
 
