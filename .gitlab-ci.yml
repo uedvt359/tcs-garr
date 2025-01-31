@@ -1,0 +1,29 @@
+image: harbor.infra.garr.it/cache/library/python:3.11
+
+stages:
+  - lint
+  - build
+  - release
+
+before_script:
+  - pip install poetry
+  - poetry config virtualenvs.create false # disable virtual environment creation and let us install all the dependencies in the operation system scope
+  - poetry install
+
+lint:
+  stage: lint
+  script:
+    - poetry run ruff format .
+
+build:
+  stage: build
+  script:
+    - echo "Building package"
+    - poetry build
+    - echo "Build done ..."
+
+    - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
+    - echo "Repository gitlab configured ..."
+    - echo "Publishing package to GitLab Package Registry"
+    - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN} --skip-existing
+    - echo "Publishing done!"
