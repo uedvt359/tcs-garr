@@ -1,10 +1,10 @@
-# Contributing to HARICA API
+# Contributing to TCS-GARR Client
 
-Thank you for considering contributing to HARICA API! We're excited to have you. This guide will help you get started with the contribution process.
+Thank you for considering contributing to TCS-GARR Client! We're excited to have you. This guide will help you get started with the contribution process.
 
 ## Table of Contents
 
-- [Contributing to HARICA API](#contributing-to-harica-api)
+- [Contributing to TCS-GARR Client](#contributing-to-tcs-garr-client)
   - [Table of Contents](#table-of-contents)
   - [How to Contribute](#how-to-contribute)
     - [Reporting Bugs](#reporting-bugs)
@@ -33,7 +33,7 @@ We welcome feature suggestions! To suggest a new feature, please open an issue o
 
     ```sh
     git clone <this_repository>
-    cd harica
+    cd tcs-garr
     ```
 
 2. **Create a Branch**:
@@ -83,7 +83,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 
     ```sh
     git clone <this_repository>
-    cd harica
+    cd tcs-garr
     ```
 
 2. **Create a virtual environment and install dependencies**:
@@ -101,7 +101,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 4. **Verify package installation**:
 
     ```sh
-    harica --help
+    tcs-garr --help
     ```
 
 ## Style Guide

@@ -31,7 +31,7 @@ console.setLevel(logging.INFO)
 console.setFormatter(logging.Formatter("%(message)s"))
 logger.addHandler(console)
 
-CONFIG_FILENAME = "harica.conf"
+CONFIG_FILENAME = "tcs-garr.conf"
 OUTPUT_FOLDER = "harica_certificates"
 
 
@@ -64,7 +64,7 @@ def load_config():
 
             return username, password, totp_seed, output_folder
 
-    logger.error("Configuration file missing. You can generate it with 'harica init' command.")
+    logger.error("Configuration file missing. You can generate it with 'tcs-garr init' command.")
     exit(1)
 
 
@@ -79,11 +79,11 @@ def create_config_file():
     for path in paths:
         if os.path.exists(path):
             logger.warning(
-                f"Configuration file already exists at {path}. If you want to reinitialize Harica configuration, delete the file first."
+                f"Configuration file already exists at {path}. If you want to reinitialize TCS-GARR configuration, delete the file first."
             )
             return
 
-    username = input(f"{Fore.GREEN}👤 Enter Harica username: {Style.RESET_ALL}")
+    username = input(f"{Fore.GREEN}👤 Enter Harica email: {Style.RESET_ALL}")
     password = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica password: {Style.RESET_ALL}")
     totp_seed = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica TOTP Seed: {Style.RESET_ALL}")
 
@@ -227,7 +227,7 @@ def download_certificate(
 def approve_certificate(harica_client, id):
     if harica_client.approve_certificate(id):
         logger.info(f"Certificate with ID {id} has been approved.")
-        logger.info(f"Requestor can download it with command: harica download --id {id} --output-filename <filename>.pem")
+        logger.info(f"Requestor can download it with command: tcs-garr download --id {id} --output-filename <filename>.pem")
     else:
         logger.error(f"Failed to approve certificate with ID {id}.")
 
@@ -303,9 +303,9 @@ def issue_certificate(harica_client, cn, alt_names, output_folder):
     cert_id = harica_client.request_certificate(domains, csr.public_bytes(serialization.Encoding.PEM).decode())
 
     logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
-    logger.info(f"Ask another administrator to approve the certificate, using command: \n\tharica approve --id {cert_id}")
+    logger.info(f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}")
     logger.info(
-        f"After administrator approve your request, you will able to download it using command: \n\tTo get fullchain: {Fore.BLUE}harica download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}harica download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
+        f"After administrator approve your request, you will able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
     )
 
 

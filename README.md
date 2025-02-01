@@ -1,6 +1,6 @@
-# Harica Client
+# TCS-GARR Client
 
-![Version](https://img.shields.io/badge/Version-0.2.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-0.2.3-brightgreen.svg)
 
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
@@ -10,7 +10,7 @@
 
 ## Overview
 
-The `Harica Client` is a command-line tool for managing and interacting with certificates on the Harica platform. It offers features like listing, downloading, issuing certificates, approving requests, and generating domain validation tokens, all via the Harica API.
+The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica platform. It offers features like listing, downloading, issuing certificates, approving requests, and generating domain validation tokens, all via the Harica API.
 
 ## Warning ⚠️
 
@@ -18,7 +18,7 @@ The `Harica Client` is a command-line tool for managing and interacting with cer
 
 ### Prerequisites
 
-Before using the Harica client, please ensure the following:
+Before using the TCS-GARR client, please ensure the following:
 
 1. **Create a local account on the Harica platform**: You must create a local account on Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM credentials, as they do not support API access.
 
@@ -30,11 +30,11 @@ Before using the Harica client, please ensure the following:
    - Save the TOTP seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
    - After enabling 2FA, request an existing administrator to elevate your account to Administrator privileges.
 
-Once these steps are completed, you are ready to use the Harica client.
+Once these steps are completed, you are ready to use the TCS-GARR client.
 
 ## Installation
 
-You can install the Harica package in a virtual environment or via `pipx`.
+You can install the TCS-GARR client in a virtual environment or via `pipx`.
 
 ### Virtual Environment
 
@@ -56,7 +56,7 @@ You can install the Harica package in a virtual environment or via `pipx`.
 3. Install the package
 
     ```bash
-    pip install harica
+    pip install tcs-garr
     ```
 
 ### Pipx
@@ -64,7 +64,7 @@ You can install the Harica package in a virtual environment or via `pipx`.
 1. Open a terminal and install the package
 
     ```bash
-    PIPX_BIN_DIR=/usr/local/bin pipx install harica
+    PIPX_BIN_DIR=/usr/local/bin pipx install tcs-garr
     ```
 
 ## Configuration
@@ -72,27 +72,27 @@ You can install the Harica package in a virtual environment or via `pipx`.
 After installation, the first time you run the client, you will need to initialize the configuration file with your credentials by running:
 
 ```bash
-harica init
+tcs-garr init
 ```
 
-This will create a `harica.conf` file in your home directory. This file will contain your Harica username, password, TOTP seed, and folder for issued certificates and will have secure permissions.
+This will create a `tcs-garr.conf` file in your home directory. This file will contain your Harica username, password, TOTP seed, and folder for issued certificates and will have secure permissions.
 
-The script will look for this configuration file in the current directory and the home directory. If not found, it will notify you to initialize the configuration using the `harica init` command.
+The script will look for this configuration file in the current directory and the home directory. If not found, it will notify you to initialize the configuration using the `tcs-garr init` command.
 
 ## Usage
 
-Once the setup is complete, you can use the Harica client for various operations. The command syntax follows this pattern:
+Once the setup is complete, you can use the TCS-GARR client for various operations. The command syntax follows this pattern:
 
 ```bash
-harica [command] [options]
+tcs-garr [command] [options]
 ```
 
 To view all available commands and options:
 
 ```bash
-harica --help
+tcs-garr --help
 
-usage: harica [-h] [--debug] {list,request,init,download,approve,whoami,validate,domains} ...
+usage: tcs-garr [-h] [--debug] {list,request,init,download,approve,whoami,validate,domains} ...
 
 Harica Certificate Manager
 
@@ -117,14 +117,14 @@ options:
 1. **Initialize configuration**:
 
    ```bash
-   harica init
+   tcs-garr init
    ```
 
    This command initializes the configuration file with your credentials (email, password, and TOTP seed).
 
 2. **Get user profile**:
    ```bash
-   harica whoami
+   tcs-garr whoami
    ```
 
    This command retrieves the profile of the logged-in user.
@@ -132,9 +132,9 @@ options:
 3. **List all certificates**:
 
    ```bash
-   harica list --help
+   tcs-garr list --help
 
-   usage: harica list [-h] [--since SINCE] [--to TO]
+   usage: tcs-garr list [-h] [--since SINCE] [--to TO]
 
     options:
     -h, --help     show this help message and exit
@@ -147,9 +147,9 @@ options:
 4. **Download a certificate**:
 
    ```bash
-   harica download --help
+   tcs-garr download --help
 
-   usage: harica download [-h] --id ID [--output-filename OUTPUT_FILENAME] [--force] [--download-type {pemBundle,certificate}]
+   usage: tcs-garr download [-h] --id ID [--output-filename OUTPUT_FILENAME] [--force] [--download-type {pemBundle,certificate}]
 
     options:
     -h, --help            show this help message and exit
@@ -166,9 +166,9 @@ options:
 5. **Request a new certificate**:
 
    ```bash
-   harica request --help
+   tcs-garr request --help
 
-   usage: harica request [-h] [--alt_names ALT_NAMES] --cn CN
+   usage: tcs-garr request [-h] [--alt_names ALT_NAMES] --cn CN
 
     options:
     -h, --help            show this help message and exit
@@ -184,8 +184,8 @@ options:
 6. **Approve a certificate**:
 
    ```bash
-   harica approve --help
-   usage: harica approve [-h] --id ID
+   tcs-garr approve --help
+   usage: tcs-garr approve [-h] --id ID
 
     options:
     -h, --help  show this help message and exit
@@ -195,7 +195,7 @@ options:
 7. **Generate validation token for domains**:
 
    ```bash
-   usage: harica validate [-h] --domains DOMAINS
+   usage: tcs-garr validate [-h] --domains DOMAINS
 
    options:
    -h, --help         show this help message and exit

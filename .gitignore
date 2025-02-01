@@ -180,4 +180,3 @@ issued_certificates/*.csr
 issued_certificates/*.pem
 issued_certificates/*.cer
 issued_certificates/*.p12
-harica.credentials

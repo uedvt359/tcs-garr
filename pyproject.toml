@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "harica"
-version = "0.2.1"
+name = "tcs-garr"
+version = "0.2.3"
 description = "Command-line tool to manage and interact with Harica platform"
 authors = [
     "Consortium GARR <system.support@garr.it>"
@@ -23,7 +23,7 @@ classifiers = [
 
 
 [tool.poetry.scripts]
-harica = "harica.main:main"
+tcs-garr = "tcs_garr.main:main"
 
 [tool.poetry.dependencies]
 python = "^3.9"
@@ -81,7 +81,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.bumpver]
-current_version = "0.2.1"
+current_version = "0.2.3"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
