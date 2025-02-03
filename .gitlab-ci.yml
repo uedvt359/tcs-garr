@@ -4,12 +4,6 @@ stages:
   - lint
   - publish
 
-cache:
-  paths:
-    - .cache/pip
-    - poetry.lock
-    - pyproject.toml
-
 before_script:
   - pip install poetry
   - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
