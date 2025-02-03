@@ -13,7 +13,7 @@ cache:
 before_script:
   - pip install poetry
   - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
-  - poetry install --no-interaction --no-ansi
+  - poetry install
   - echo "Dependencies installed, building package..."
   - poetry build
   - echo "Build done."
@@ -42,7 +42,7 @@ publish_pypi:
     - poetry config pypi-token.pypi ${PYPI_TOKEN}
     - echo "Repository PyPI configured ..."
     - echo "Publishing package to PyPI"
-    - poetry publish --no-interaction --no-ansi
+    - poetry publish
     - echo "Publishing to PyPI done!"
   only:
     - main
