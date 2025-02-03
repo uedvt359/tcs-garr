@@ -14,6 +14,8 @@ The `TCS-GARR Client` is a command-line tool for managing and interacting with H
 
 ## Warning ⚠️
 
+**Consortium GARR is not affiliated with HARICA, and the present work has not been endorsed by or agreed with HARICA.**
+
 **Consortium GARR provides this code to the community for sharing purposes but does not commit to providing support, maintenance, or further development of the code. Use it at your own discretion.**
 
 ### Prerequisites
@@ -24,11 +26,11 @@ Before using the TCS-GARR client, please ensure the following:
 
    - If you're already logged in with federated IDEM credentials, you can create a new local account using an email alias. Federated users do not have a password and therefore cannot use the API.
 
-2. **Administrator Permissions**: To use the API, your local account must have administrator permissions. To obtain these:
+2. **Administrator and Approver Permissions**: To use the API, your local account must have Administrator and Approver permissions. To obtain these:
 
    - **Enable 2FA (Two-Factor Authentication)** on your profile page.
-   - Save the TOTP seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
-   - After enabling 2FA, request an existing administrator to elevate your account to Administrator privileges.
+   - **Save the TOTP** seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
+   - After enabling 2FA, request an existing administrator to elevate your account to Administrator and Approver.
 
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
@@ -179,7 +181,7 @@ options:
 
    Replace `CN` with the Common Name (e.g., `example.com`) and `ALT_NAMES` with alternative names for the certificate (comma-separated).
 
-   After requesting a new certificate, it will need to be approved by an administrator before it can be downloaded.
+   After requesting a new certificate, it will need to be approved by **another** Administrator before it can be downloaded.
 
 6. **Approve a certificate**:
 

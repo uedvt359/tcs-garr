@@ -21,6 +21,11 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Documentation = "https://github.com/ConsortiumGARR/tcs-garr/blob/main/README.md"
+Repository = "https://github.com/ConsortiumGARR/tcs-garr"
+Changelog = "https://github.com/ConsortiumGARR/tcs-garr/blob/main/CHANGELOG.md"
+
 
 [tool.poetry.scripts]
 tcs-garr = "tcs_garr.main:main"

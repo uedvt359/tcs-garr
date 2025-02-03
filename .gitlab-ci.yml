@@ -4,18 +4,26 @@ stages:
   - lint
   - publish
 
+cache:
+  paths:
+    - .cache/pip
+    - poetry.lock
+    - pyproject.toml
+
 before_script:
   - pip install poetry
-  - poetry config virtualenvs.create false # disable virtual environment creation and let us install all the dependencies in the operation system scope
-  - poetry install
-  - echo "Building package"
+  - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
+  - poetry install --no-interaction --no-ansi
+  - echo "Dependencies installed, building package..."
   - poetry build
-  - echo "Build done ..."
+  - echo "Build done."
 
 lint:
   stage: lint
   script:
     - poetry run ruff format .
+  only:
+    - main
 
 publish_gitlab:
   stage: publish
@@ -24,7 +32,9 @@ publish_gitlab:
     - echo "Repository gitlab configured ..."
     - echo "Publishing package to GitLab Package Registry"
     - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN} --skip-existing
-    - echo "Publishing done!"
+    - echo "Publishing to GitLab done!"
+  only:
+    - main
 
 publish_pypi:
   stage: publish
@@ -32,5 +42,7 @@ publish_pypi:
     - poetry config pypi-token.pypi ${PYPI_TOKEN}
     - echo "Repository PyPI configured ..."
     - echo "Publishing package to PyPI"
-    - poetry publish
-    - echo "Publishing done!"
+    - poetry publish --no-interaction --no-ansi
+    - echo "Publishing to PyPI done!"
+  only:
+    - main

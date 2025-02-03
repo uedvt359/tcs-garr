@@ -21,18 +21,18 @@ Thank you for considering contributing to TCS-GARR Client! We're excited to have
 
 ### Reporting Bugs
 
-If you find a bug in the project, please open an issue on GitLab with detailed information. Include steps to reproduce the issue, your environment details, and any relevant logs or screenshots.
+If you find a bug in the project, please open an issue with detailed information. Include steps to reproduce the issue, your environment details, and any relevant logs or screenshots.
 
 ### Suggesting Features
 
-We welcome feature suggestions! To suggest a new feature, please open an issue on GitLab and describe your idea. Explain why the feature would be useful and how it should work.
+We welcome feature suggestions! To suggest a new feature, please open an issue and describe your idea. Explain why the feature would be useful and how it should work.
 
 ### Submitting Code Changes
 
 1. **Clone the Repository**:
 
     ```sh
-    git clone <this_repository>
+    git clone https://github.com/ConsortiumGARR/tcs-garr
     cd tcs-garr
     ```
 
@@ -82,7 +82,7 @@ curl -sSL https://install.python-poetry.org | python3 -
 1. **Clone the repository**:
 
     ```sh
-    git clone <this_repository>
+    git clone https://github.com/ConsortiumGARR/tcs-garr
     cd tcs-garr
     ```
 
