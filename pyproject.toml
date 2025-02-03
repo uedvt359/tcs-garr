@@ -1,24 +1,16 @@
-[tool.poetry]
+[project]
 name = "tcs-garr"
 version = "0.2.5"
 description = "Command-line tool to manage and interact with Harica platform"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.9"
+dynamic = ["dependencies", "classifiers"]
 authors = [
-    "Consortium GARR <system.support@garr.it>"
+    { name = "Consortium GARR", email = "system.support@garr.it" }
 ]
 maintainers = [
-    "Consortium GARR <system.support@garr.it>"
-]
-readme = "README.md"
-license = "GPL-3.0-or-later"
-
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
-    "Programming Language :: Python",
-    "Programming Language :: Python :: 3.9",
-    "Topic :: Software Development :: Libraries",
-    "Operating System :: OS Independent",
+    { name = "Consortium GARR", email = "system.support@garr.it" }
 ]
 
 [project.urls]
@@ -26,8 +18,7 @@ Documentation = "https://github.com/ConsortiumGARR/tcs-garr/blob/main/README.md"
 Repository = "https://github.com/ConsortiumGARR/tcs-garr"
 Changelog = "https://github.com/ConsortiumGARR/tcs-garr/blob/main/CHANGELOG.md"
 
-
-[tool.poetry.scripts]
+[project.scripts]
 tcs-garr = "tcs_garr.main:main"
 
 [tool.poetry.dependencies]
