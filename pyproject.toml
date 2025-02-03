@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tcs-garr"
-version = "0.2.4"
+version = "0.2.5"
 description = "Command-line tool to manage and interact with Harica platform"
 authors = [
     "Consortium GARR <system.support@garr.it>"
@@ -86,7 +86,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.bumpver]
-current_version = "0.2.4"
+current_version = "0.2.5"
 version_pattern = "MAJOR.MINOR.PATCH"
 commit_message = "chore: Bump version {old_version} -> {new_version}"
 tag_message = "{new_version}"
