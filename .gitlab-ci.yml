@@ -1,4 +1,4 @@
-image: harbor.infra.garr.it/cache/library/python:3.11
+image: harbor.infra.garr.it/cache/library/python:3.12
 
 stages:
   - lint
