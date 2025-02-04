@@ -1,32 +1,19 @@
-# CHANGELOG
+## 0.2.6 (2025-02-04)
 
-## [0.2.3] - 2025-02-03
+### Fix
 
-### Modified
+- poetry config file
+- gitlab-ci
+- gitlab-ci
 
-- Modified name to tcs-garr
+### Refactor
 
-## [Previous Versions]
+- Add commitizen for conventional commit and semantic release
 
-## [0.2.1] - 2025-01-31
+## 0.2.5 (2025-02-03)
 
-### Modified
+## 0.2.4 (2025-02-03)
 
-- Prepare for PyPI release
+### Refactor
 
-## [0.2.0] - 2025-01-30
-
-### Added
-
-- Command to list available domains in organization.
-- Command to submit domain validation to Harica.
-
-## [0.1.1]
-
-### Added
-
-- Certificate download is done by using administrator endpoint. This allow to download all certificate, not only those requested by the user.
-
-### [0.1.0] - 2025-01-27
-
-- Initial release.
+- Change name to tcs-garr
