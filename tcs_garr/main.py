@@ -39,7 +39,7 @@ def load_config():
     """
     Load Harica configuration from a file in the current directory or the home directory.
 
-    :return: (username, password, output_folder) tuple
+    :return: (username, password, totp_seed, output_folder) tuple
     """
     paths = [
         os.path.join(os.getcwd(), CONFIG_FILENAME),
@@ -109,7 +109,6 @@ def create_config_file():
 
 def whoami(harica_client):
     user = harica_client.get_logged_in_user_profile()
-
     logger.info(f"{Fore.GREEN}👤 Logged in as {user['fullName']} ({user['email']}){Style.RESET_ALL}")
 
 
@@ -220,6 +219,7 @@ def download_certificate(
                 print(f"Certificate saved to {output_path}")
         else:
             print(data_to_write)
+
     else:
         print(f"No data found for certificate ID {cert_id}.")
 
