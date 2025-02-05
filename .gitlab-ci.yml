@@ -28,10 +28,9 @@ auto-bump:
     - git remote rm origin && git remote add origin https://$CI_USERNAME:$PROJECT_ACCESS_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
     - git checkout -B "$CI_COMMIT_REF_NAME" "$CI_COMMIT_SHA"
     - poetry run cz bump --yes # execute auto bump and push to main
-    - git push --follow-tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
-  rules:
-    # $GITLAB_USER_LOGIN != $CI_USERNAME ensures that this job won't produce an infinite loop by triggering itself when pushing back to the main branch.
-    - if: '$CI_COMMIT_BRANCH == "main" && $GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+    - git push -o ci.skip --follow-tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
+  only:
+    - main
 
 publish_gitlab:
   stage: publish
