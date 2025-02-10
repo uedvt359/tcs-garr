@@ -94,12 +94,12 @@ To view all available commands and options:
 ```bash
 tcs-garr --help
 
-usage: tcs-garr [-h] [--debug] {list,request,init,download,approve,whoami,validate,domains} ...
+usage: tcs-garr [-h] [--debug] {list,request,init,download,approve,whoami,validate,domains,cancel} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {list,request,init,download,approve,whoami,validate,domains}
+  {list,request,init,download,approve,whoami,validate,domains,cancel}
     list                Generate a report from Sectigo
     request             Request a new certificate
     init                Generate Sectigo config file
@@ -108,6 +108,7 @@ positional arguments:
     whoami              Get logged in user profile
     validate            Create validation token for domains
     domains             List available domains
+    cancel              Cancel a request by ID
 
 options:
   -h, --help            show this help message and exit
@@ -199,7 +200,21 @@ options:
 
    You can also approve a specific certificate by providing its ID using the `--id` option.
 
-7. **Generate validation token for domains**:
+7. **Cancel a certificate request**:
+
+   ```bash
+   tcs-garr cancel --help
+
+   usage: tcs-garr cancel [-h] --id ID
+
+   options:
+   -h, --help  show this help message and exit
+   --id ID     ID of the request to cancel.
+   ```
+
+   Replace `ID` with the ID of the certificate you wish to cancel.
+
+8. **Generate validation token for domains**:
 
    ```bash
    usage: tcs-garr validate [-h] --domains DOMAINS

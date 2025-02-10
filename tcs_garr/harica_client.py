@@ -356,6 +356,26 @@ class HaricaClient:
         # Return True if all reviews were successfully processed
         return True
 
+    def cancel_transaction(self, transaction_id):
+        """
+        Cancels a pending certificate request based on the provided certificate ID.
+
+        Args:
+            transaction_id (str): The certificate ID to cancel.
+
+        Returns:
+            bool: True if the cancellation was successful, False otherwise.
+
+        """
+        # Prepare the payload for cancelling the transaction
+        cancel_payload = {"id": transaction_id}
+
+        # Make the POST request to cancel the transaction
+        response = self.__make_post_request("/api/Transaction/CancelTransaction", data=cancel_payload)
+
+        # Check if the cancellation was successful
+        return response.status_code == 200
+
     def list_domains(self):
         # Step 1: Search for the first available group in the organization
         groups = self.__make_post_request("/api/OrganizationAdmin/SearchGroups", data={"key": "", "value": ""}).json()

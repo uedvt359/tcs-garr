@@ -270,6 +270,13 @@ def approve_transactions(harica_client, ids=None):
             logger.error(f"Failed to approve certificate with ID {id}. You cannot approve your own request.")
 
 
+def cancel_transaction(harica_client, id):
+    if harica_client.cancel_transaction(id):
+        logger.info(f"Transaction with ID {id} has been canceled.")
+    else:
+        logger.error(f"Failed to cancel transaction with ID {id}.")
+
+
 def issue_certificate(harica_client, cn, alt_names, output_folder):
     domains = [cn]
     for alt_name in alt_names.split(","):
@@ -414,6 +421,10 @@ def main():
     # Command to list domains validation token
     subparser.add_parser("domains", help="List available domains")
 
+    # Command to cancel pending request
+    cancel_cmd = subparser.add_parser("cancel", help="Cancel a request by ID")
+    cancel_cmd.add_argument("--id", required=True, help="ID of the request to cancel.")
+
     args = parser.parse_args()
 
     if args.command == "init":
@@ -451,6 +462,8 @@ def main():
         list_domains(harica_client)
     elif args.command == "validate":
         validate_domains(harica_client, args.domains.split(","))
+    elif args.command == "cancel":
+        cancel_transaction(harica_client, args.id)
 
 
 if __name__ == "__main__":
