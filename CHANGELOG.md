@@ -1,3 +1,9 @@
+## 0.3.0 (2025-02-10)
+
+### Feat
+
+- List and approve all pending certificate request
+
 ## 0.2.7 (2025-02-05)
 
 ### Fix
