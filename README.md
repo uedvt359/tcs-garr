@@ -186,13 +186,18 @@ options:
 6. **Approve a certificate**:
 
    ```bash
-   tcs-garr approve --help
-   usage: tcs-garr approve [-h] --id ID
+   usage: tcs-garr approve [-h] (--id ID | --list-pending | --all)
 
-    options:
-    -h, --help  show this help message and exit
-    --id ID     ID of the certificate to approve.
+   options:
+   -h, --help      show this help message and exit
+   --id ID         ID of the certificates (comma separated) to approve.
+   --list-pending  List all pending requests.
+   --all           Approve all pending requests.
    ```
+
+   You can list all pending requests using the `--list-pending` option or approve all pending requests using the `--all` option.
+
+   You can also approve a specific certificate by providing its ID using the `--id` option.
 
 7. **Generate validation token for domains**:
 

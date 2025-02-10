@@ -224,12 +224,50 @@ def download_certificate(
         print(f"No data found for certificate ID {cert_id}.")
 
 
-def approve_certificate(harica_client, id):
-    if harica_client.approve_certificate(id):
-        logger.info(f"Certificate with ID {id} has been approved.")
-        logger.info(f"Requestor can download it with command: tcs-garr download --id {id} --output-filename <filename>.pem")
-    else:
-        logger.error(f"Failed to approve certificate with ID {id}.")
+def list_pending_certificates(harica_client):
+    transactions = harica_client.get_pending_transactions()
+
+    data = []
+    for item in transactions:
+        data.append(
+            [
+                item["transactionId"],
+                ",".join([domain["fqdn"] for domain in item["domains"]]),
+                item["transactionStatus"],
+                item["user"],
+            ]
+        )
+
+    logger.info(
+        tabulate(
+            data,
+            headers=[
+                Fore.BLUE + "ID",
+                "CN",
+                "Status",
+                "Requested by" + Style.RESET_ALL,
+            ],
+        )
+    )
+
+
+def approve_transactions(harica_client, ids=None):
+    if ids is None:
+        # If no IDs are provided, get the pending transactions
+        transactions = harica_client.get_pending_transactions()
+        ids = [transaction["transactionId"] for transaction in transactions]
+
+    for id in ids:
+        try:
+            if harica_client.approve_transaction(id):
+                logger.info(f"Certificate with ID {id} has been approved.")
+                logger.info(
+                    f"Requestor can download it with command: tcs-garr download --id {id} --output-filename <filename>.pem"
+                )
+            else:
+                logger.error(f"Failed to approve certificate with ID {id}.")
+        except PermissionError:
+            logger.error(f"Failed to approve certificate with ID {id}. You cannot approve your own request.")
 
 
 def issue_certificate(harica_client, cn, alt_names, output_folder):
@@ -357,7 +395,14 @@ def main():
 
     # Command to approve certificate by ID
     approve_certificate_cmd = subparser.add_parser("approve", help="Approve a certificate by ID")
-    approve_certificate_cmd.add_argument("--id", required=True, help="ID of the certificate to approve.")
+
+    # Create a mutually exclusive group
+    approve_certificate_group = approve_certificate_cmd.add_mutually_exclusive_group(required=True)
+
+    # Add --id and --list-pending as mutually exclusive arguments
+    approve_certificate_group.add_argument("--id", help="ID of the certificates (comma separated) to approve.")
+    approve_certificate_group.add_argument("--list-pending", action="store_true", help="List all pending requests.")
+    approve_certificate_group.add_argument("--all", action="store_true", help="Approve all pending requests.")
 
     # Command to get user profile
     subparser.add_parser("whoami", help="Get logged in user profile")
@@ -394,7 +439,12 @@ def main():
     elif args.command == "download":
         download_certificate(harica_client, args.id, args.download_type, output_folder, args.output_filename, args.force)
     elif args.command == "approve":
-        approve_certificate(harica_client, args.id)
+        if args.id:
+            approve_transactions(harica_client, args.id.split(","))
+        elif args.all:
+            approve_transactions(harica_client)
+        elif args.list_pending:
+            list_pending_certificates(harica_client)
     elif args.command == "whoami":
         whoami(harica_client)
     elif args.command == "domains":

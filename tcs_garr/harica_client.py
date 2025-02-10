@@ -278,22 +278,12 @@ class HaricaClient:
 
         return data.json()["id"]
 
-    def approve_certificate(self, certificate_id):
+    def get_pending_transactions(self):
         """
-        Approves a pending certificate request based on the provided certificate ID.
-
-        This method retrieves transactions for certificates that are pending review, filters for
-        the certificate matching the provided certificate ID, and performs the review process
-        by submitting the necessary review updates.
-
-        Args:
-            certificate_id (str): The certificate ID to approve.
+        Retrieves a list of pending transactions.
 
         Returns:
-            bool: True if the approval process was successful, False otherwise.
-
-        Raises:
-            Exception: If no reviews are found for the specified certificate or if the approval fails.
+            List: A list of pending transactions.
         """
         # Prepare the payload to retrieve SSL reviewable transactions
         json_payload = {"startIndex": 0, "status": "Pending", "filterPostDTOs": []}
@@ -303,12 +293,34 @@ class HaricaClient:
             "/api/OrganizationValidatorSSL/GetSSLReviewableTransactions", data=json_payload
         ).json()
 
+        return transactions
+
+    def approve_transaction(self, transaction_id):
+        """
+        Approves a pending certificate request based on the provided certificate ID.
+
+        This method retrieves transactions for certificates that are pending review, filters for
+        the certificate matching the provided certificate ID, and performs the review process
+        by submitting the necessary review updates.
+
+        Args:
+            transaction_id (str): The certificate ID to approve.
+
+        Returns:
+            bool: True if the approval process was successful, False otherwise.
+
+        Raises:
+            Exception: If no reviews are found for the specified certificate or if the approval fails.
+        """
+        # Retrieve SSL reviewable transactions
+        transactions = self.get_pending_transactions()
+
         # Initialize a list to store reviews to be processed
         reviews = []
 
         # Iterate through the transactions to find the matching certificate
         for transaction in transactions:
-            if transaction.get("transactionId") == certificate_id:
+            if transaction.get("transactionId") == transaction_id:
                 # Extract the reviews for the matching certificate transaction
                 review_dtos = transaction.get("reviewGetDTOs", [])
                 for rev in review_dtos:
@@ -317,7 +329,7 @@ class HaricaClient:
 
         # Check if there are reviews to process
         if not reviews:
-            logger.warning(f"No available reviews for certificate with ID {certificate_id}")
+            logger.warning(f"No available reviews for transaction with ID {transaction_id}")
             return False
 
         # Perform the review process for each review found
@@ -338,7 +350,7 @@ class HaricaClient:
 
             # Check if the review submission was successful
             if response.status_code != 200:
-                logger.error(f"Failed to approve review {review_id} for certificate {certificate_id}")
+                logger.error(f"Failed to approve review {review_id} for transaction {transaction_id}")
                 return False
 
         # Return True if all reviews were successfully processed
