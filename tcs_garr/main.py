@@ -277,7 +277,7 @@ def cancel_transaction(harica_client, id):
         logger.error(f"Failed to cancel transaction with ID {id}.")
 
 
-def issue_certificate(harica_client, cn, alt_names, output_folder):
+def generate_key_csr(harica_client, cn, alt_names, output_folder):
     domains = [cn]
     for alt_name in alt_names.split(","):
         if alt_name and alt_name not in domains:
@@ -343,15 +343,34 @@ def issue_certificate(harica_client, cn, alt_names, output_folder):
         f.write(csr.public_bytes(serialization.Encoding.PEM))
     logger.info(f"{Fore.BLUE}CSR created in {csr_path}{Style.RESET_ALL}")
 
-    logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
+    return csr_path
 
-    cert_id = harica_client.request_certificate(domains, csr.public_bytes(serialization.Encoding.PEM).decode())
 
-    logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
-    logger.info(f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}")
-    logger.info(
-        f"After administrator approve your request, you will able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
-    )
+def issue_certificate(harica_client, csr_file):
+    try:
+        with open(csr_file, "rb") as f:
+            csr = x509.load_pem_x509_csr(f.read(), default_backend())
+
+            cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
+            alt_names = [x.value for x in csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value]
+            domains = set()
+            domains.add(cn)
+            domains.update(alt_names)
+
+            logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
+
+            cert_id = harica_client.request_certificate(list(domains), csr.public_bytes(serialization.Encoding.PEM).decode())
+
+            logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
+            logger.info(
+                f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}"
+            )
+            logger.info(
+                f"After administrator approve your request, you will able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
+            )
+    except FileNotFoundError:
+        logger.error(f"{Fore.RED}CSR file {csr_file} not found.{Style.RESET_ALL}")
+        exit(1)
 
 
 def main():
@@ -365,7 +384,7 @@ def main():
     subparser = parser.add_subparsers(dest="command")
 
     # Command to list certificates
-    list_certificate_cmd = subparser.add_parser("list", help="Generate a report from Sectigo")
+    list_certificate_cmd = subparser.add_parser("list", help="Generate a report from Harica")
     list_certificate_cmd.add_argument(
         "--since",
         type=int,
@@ -378,11 +397,17 @@ def main():
 
     # Command to create a certificate
     create_cmd = subparser.add_parser("request", help="Request a new certificate")
-    create_cmd.add_argument("--alt_names", default="", help="Comma separated alternative names.")
-    create_cmd.add_argument("--cn", required=True, help="Common name of the certificate.")
+
+    # Create a mutually exclusive group for --csr and --cn (plus optional --alt_names)
+    create_group = create_cmd.add_mutually_exclusive_group(required=True)
+    create_group.add_argument("--csr", type=str, help="Path to an existing CSR file.")
+
+    # When no --csr is provided, user must provide --cn (with optional --alt_names)
+    create_group.add_argument("--cn", help="Common name of the certificate.")
+    create_cmd.add_argument("--alt_names", default="", help="Comma-separated alternative names (only used with --cn).")
 
     # Command to generate config file
-    subparser.add_parser("init", help="Generate Sectigo config file")
+    subparser.add_parser("init", help="Generate Harica config file")
 
     # Command to download a certificate by ID
     get_certificate_cmd = subparser.add_parser("download", help="Download a certificate by ID")
@@ -427,6 +452,10 @@ def main():
 
     args = parser.parse_args()
 
+    # Additional logic to ensure --alt_names is only used with --cn and not with --csr
+    if args.csr and args.alt_names:
+        parser.error("--alt_names cannot be used with --csr.")
+
     if args.command == "init":
         create_config_file()
         return
@@ -436,12 +465,12 @@ def main():
     harica_client = HaricaClient(username, password, totp_seed)
 
     if args.command == "request":
-        issue_certificate(
-            harica_client=harica_client,
-            cn=args.cn,
-            alt_names=args.alt_names,
-            output_folder=output_folder,
-        )
+        if args.cn:
+            csr_path = generate_key_csr(harica_client, args.cn, args.alt_names, output_folder)
+            issue_certificate(harica_client, csr_path)
+        else:
+            # CSR has been provided
+            issue_certificate(harica_client, args.csr)
     elif args.command == "list":
         current_date = pytz.utc.localize(datetime.now())
         from_date = current_date - timedelta(days=args.since)

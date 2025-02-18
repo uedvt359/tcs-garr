@@ -100,9 +100,9 @@ Harica Certificate Manager
 
 positional arguments:
   {list,request,init,download,approve,whoami,validate,domains,cancel}
-    list                Generate a report from Sectigo
+    list                Generate a report from Harica
     request             Request a new certificate
-    init                Generate Sectigo config file
+    init                Generate Harica config file
     download            Download a certificate by ID
     approve             Approve a certificate by ID
     whoami              Get logged in user profile
@@ -171,18 +171,26 @@ options:
    ```bash
    tcs-garr request --help
 
-   usage: tcs-garr request [-h] [--alt_names ALT_NAMES] --cn CN
+   usage: tcs-garr request [-h] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
 
-    options:
-    -h, --help            show this help message and exit
-    --alt_names ALT_NAMES
-                            Comma separated alternative names.
-    --cn CN               Common name of the certificate.
+   options:
+   -h, --help            show this help message and exit
+   --csr CSR             Path to an existing CSR file.
+   --cn CN               Common name of the certificate.
+   --alt_names ALT_NAMES
+                           Comma-separated alternative names (only used with --cn).
    ```
 
-   Replace `CN` with the Common Name (e.g., `example.com`) and `ALT_NAMES` with alternative names for the certificate (comma-separated).
+   The `request` command is used to submit a new certificate request to Harica.
 
-   After requesting a new certificate, it will need to be approved by **another** Administrator before it can be downloaded.
+   &nbsp;
+
+   You can either provide an existing Certificate Signing Request (`--csr`) or specify the details for generating a new CSR, including the Common Name (`--cn`) and any Subject Alternative Names (`--alt_names`).
+   If a new CSR is created using the `--cn` and `--alt_names` options, a private key will also be automatically generated.
+
+   &nbsp;
+
+   After submitting the certificate request, the request must be approved by another Administrator before the certificate can be downloaded. Ensure that an administrator is available to review and approve your request.
 
 6. **Approve a certificate**:
 
