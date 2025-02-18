@@ -1,3 +1,9 @@
+## 0.5.0 (2025-02-18)
+
+### Feat
+
+- Submit request from existing CSR file
+
 ## 0.4.0 (2025-02-10)
 
 ### Feat
