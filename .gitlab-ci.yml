@@ -25,8 +25,8 @@ auto-bump:
     - git config http.sslVerify false
     - git remote rm origin && git remote add origin https://$CI_USERNAME:$PROJECT_ACCESS_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
     - git checkout -B "$CI_COMMIT_REF_NAME" "$CI_COMMIT_SHA"
-    - poetry run cz bump --yes # execute auto bump and push to main
-    - git push -o ci.skip --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
+    - poetry run cz bump --yes || true # execute auto bump, continue even if no bump is necessary
+    - git diff --exit-code || (git push -o ci.skip --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH) # Only push if there are changes
   only:
     - main
 
