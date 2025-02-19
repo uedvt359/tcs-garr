@@ -27,17 +27,20 @@ auto-bump:
     - git checkout -B "$CI_COMMIT_REF_NAME" "$CI_COMMIT_SHA"
     - poetry run cz bump --yes || true # execute auto bump, continue even if no bump is necessary
     - git diff --exit-code || (git push -o ci.skip --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH) # Only push if there are changes
+    - poetry build
   only:
     - main
+  artifacts:
+    paths:
+      - dist/
 
 publish_gitlab:
   stage: publish
   script:
-    - poetry config repositories.gitlab ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi
-    - poetry build
-    - echo "Repository gitlab configured ..."
-    - echo "Publishing package to GitLab Package Registry"
-    - poetry publish --repository gitlab -u gitlab-ci-token -p ${CI_JOB_TOKEN} --skip-existing
+    - pip install --upgrade pip
+    - pip install build twine
+    - echo "Publishing package to Gitlab"
+    - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
     - echo "Publishing to GitLab done!"
   only:
     - main
@@ -45,11 +48,10 @@ publish_gitlab:
 publish_pypi:
   stage: publish
   script:
-    - poetry config pypi-token.pypi ${PYPI_TOKEN}
-    - echo "Repository PyPI configured ..."
-    - poetry build
+    - pip install --upgrade pip
+    - pip install build twine
     - echo "Publishing package to PyPI"
-    - poetry publish
+    - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
     - echo "Publishing to PyPI done!"
   only:
     - main
