@@ -206,7 +206,7 @@ def download_certificate(
         if p7b_data:
             pkcs7_cert = pkcs7.load_der_pkcs7_certificates(p7b_data)
             if pkcs7_cert:
-                data_to_write = "\n".join(cert.public_bytes(serialization.Encoding.PEM).decode("utf-8") for cert in pkcs7_cert)
+                data_to_write = "".join(cert.public_bytes(serialization.Encoding.PEM).decode("utf-8") for cert in pkcs7_cert)
 
     if data_to_write:
         if output_folder and output_filename:
@@ -214,8 +214,9 @@ def download_certificate(
             if os.path.exists(output_path) and not force:
                 print(f"File {output_path} already exists. Use --force to overwrite.")
             else:
-                with open(output_path, "w" if download_type != "pemBundle" else "wb") as cert_file:
-                    cert_file.write(data_to_write if isinstance(data_to_write, bytes) else data_to_write.encode("utf-8"))
+                # Write to the file with appropriate mode
+                with open(output_path, "wb" if isinstance(data_to_write, bytes) else "w") as cert_file:
+                    cert_file.write(data_to_write)
                 print(f"Certificate saved to {output_path}")
         else:
             print(data_to_write)
@@ -353,6 +354,11 @@ def issue_certificate(harica_client, csr_file):
 
             cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
             alt_names = [x.value for x in csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value]
+
+            # Check if the number of SANs is 10 or more and print a warning
+            if len(alt_names) >= 10:
+                logger.warning(f"{Fore.RED}Warning: Certificates with more than 10 SANs might be refused.{Style.RESET_ALL}")
+
             domains = set()
             domains.add(cn)
             domains.update(alt_names)
@@ -366,8 +372,9 @@ def issue_certificate(harica_client, csr_file):
                 f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}"
             )
             logger.info(
-                f"After administrator approve your request, you will able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
+                f"After administrator approval, you will be able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
             )
+
     except FileNotFoundError:
         logger.error(f"{Fore.RED}CSR file {csr_file} not found.{Style.RESET_ALL}")
         exit(1)
@@ -452,10 +459,6 @@ def main():
 
     args = parser.parse_args()
 
-    # Additional logic to ensure --alt_names is only used with --cn and not with --csr
-    if args.csr and args.alt_names:
-        parser.error("--alt_names cannot be used with --csr.")
-
     if args.command == "init":
         create_config_file()
         return
@@ -465,6 +468,11 @@ def main():
     harica_client = HaricaClient(username, password, totp_seed)
 
     if args.command == "request":
+        # Additional logic to ensure --alt_names is only used with --cn and not with --csr
+        if args.csr and args.alt_names:
+            parser.error("--alt_names cannot be used with --csr.")
+            exit(1)
+
         if args.cn:
             csr_path = generate_key_csr(harica_client, args.cn, args.alt_names, output_folder)
             issue_certificate(harica_client, csr_path)
