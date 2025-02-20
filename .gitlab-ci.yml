@@ -79,3 +79,10 @@ build_docker_image:
     - docker push $CONTAINER_IMAGE_PATH/$IMAGE_NAME:$TAG
     - docker push $CONTAINER_IMAGE_PATH/$IMAGE_NAME:latest
     - echo "Pushed $CONTAINER_IMAGE_PATH/$IMAGE_NAME:$TAG and latest"
+  rules:
+    - if: $CI_COMMIT_TAG
+      when: never
+    - if: $CI_COMMIT_REF_NAME == "main" || $CI_PIPELINE_SOURCE == 'merge_request_event'
+      changes:
+        - Dockerfile
+        - tcs_garr/*
