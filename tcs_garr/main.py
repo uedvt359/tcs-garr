@@ -20,6 +20,7 @@ from dateutil import parser
 from tabulate import tabulate
 
 from .harica_client import HaricaClient
+from .exceptions import NoHaricaAdminException, NoHaricaApproverException
 
 # Set up logging
 logger = logging.getLogger()
@@ -465,7 +466,14 @@ def main():
 
     username, password, totp_seed, output_folder = load_config()
 
-    harica_client = HaricaClient(username, password, totp_seed)
+    try:
+        harica_client = HaricaClient(username, password, totp_seed)
+    except NoHaricaAdminException:
+        logger.error(f"{Fore.RED}No Harica Admin role found in the user profile.{Style.RESET_ALL}")
+        exit(1)
+    except NoHaricaApproverException:
+        logger.error(f"{Fore.RED}No Harica Approver role found in the user profile.{Style.RESET_ALL}")
+        exit(1)
 
     if args.command == "request":
         # Additional logic to ensure --alt_names is only used with --cn and not with --csr

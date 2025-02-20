@@ -7,6 +7,8 @@ import jwt
 import requests
 from bs4 import BeautifulSoup
 
+from .exceptions import NoHaricaAdminException, NoHaricaApproverException
+
 from .utils import generate_otp
 
 # Initialize logger
@@ -140,6 +142,12 @@ class HaricaClient:
         )
 
         logger.debug("Login successful.")
+
+        current_logged_in_user = self.get_logged_in_user_profile()
+        if "Enterprise Admin" not in current_logged_in_user["role"]:
+            raise NoHaricaAdminException
+        if "SSL Enterprise Approver" not in current_logged_in_user["role"]:
+            raise NoHaricaApproverException
 
     def get_logged_in_user_profile(self):
         """
