@@ -67,7 +67,7 @@ build_docker_image:
     IMAGE_NAME: tcs-garr
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-    - export TAG=$(grep -oP '(?<=^version = ").*(?="$)' pyproject.toml)
+    - export TAG=$(grep '^version =' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
   script:
     - echo "Building $CONTAINER_IMAGE_PATH/$IMAGE_NAME:$TAG"
     - docker pull $CONTAINER_IMAGE_PATH/$IMAGE_NAME:$TAG || true
