@@ -1,3 +1,9 @@
+## 0.5.2 (2025-02-20)
+
+### Fix
+
+- Improve message exception when user is not admin or approver
+
 ## 0.5.1 (2025-02-19)
 
 ### Fix
