@@ -1,3 +1,14 @@
+## 0.6.0 (2025-02-21)
+
+### Feat
+
+- docker ci rules
+- tcs doker
+
+### Fix
+
+- use grep and sed to extract version
+
 ## 0.5.2 (2025-02-20)
 
 ### Fix
