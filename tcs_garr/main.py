@@ -19,6 +19,7 @@ from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
 from dateutil import parser
 from tabulate import tabulate
+from importlib.metadata import version
 
 from .harica_client import HaricaClient
 from .exceptions import NoHaricaAdminException, NoHaricaApproverException
@@ -450,7 +451,11 @@ def main():
     parser = argparse.ArgumentParser(description="Harica Certificate Manager")
 
     parser.add_argument("--debug", action="store_true", default=False, help="Enable DEBUG logging.")
-
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=version("tcs-garr"),
+    )
     subparser = parser.add_subparsers(dest="command")
 
     # Command to list certificates
