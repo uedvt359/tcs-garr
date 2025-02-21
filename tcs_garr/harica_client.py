@@ -170,9 +170,11 @@ class HaricaClient:
             dict: The certificate details.
         """
         pending_certs = self.list_certificates(status="Pending")
+        logger.debug(json.dumps(pending_certs))
 
         for pc in pending_certs:
-            if pc.get('transactionId') == certificate_id:
+            # Check also pc.get("transactionStatus"). Better safe than sorry.
+            if pc.get('transactionId') == certificate_id and pc.get("transactionStatus") == "Pending":
                 raise CertificateNotApprovedException
 
         # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
@@ -186,11 +188,20 @@ class HaricaClient:
         """
         Retrieves a list of valid certificates.
 
+        Available statuses:
+            - "Valid"
+            - "Pending"
+
         Returns:
             dict: List of certificates.
         """
+        status_mapping = {
+            "Valid": "GetSSLTransactions",
+            "Pending": "GetSSLReviewableTransactions"
+        }
+
         json_payload = {"startIndex": 0, "status": status, "filterPostDTOs": []}
-        data = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLTransactions", data=json_payload).json()
+        data = self.__make_post_request(f"/api/OrganizationValidatorSSL/{status_mapping[status]}", data=json_payload).json()
         return data
 
     def build_domains_list(self, domains):
