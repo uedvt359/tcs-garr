@@ -1,3 +1,12 @@
+## 0.7.0 (2025-02-21)
+
+### Feat
+
+- workaround for merge request pipelines
+- add show version cli flag
+- load config from env variable. validate configs. fix path expansion. Use constant for paths
+- ruff update
+
 ## 0.6.0 (2025-02-21)
 
 ### Feat
