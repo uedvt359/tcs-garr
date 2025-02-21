@@ -44,6 +44,7 @@ CONFIG_PATHS = [
     CONFIG_PATH,
 ]
 
+
 def validate_config(config_data):
     """
     Validates that all required configuration fields are present and correct.
@@ -69,6 +70,7 @@ def validate_config(config_data):
         logger.error(f"❌ Invalid TOTP seed: {config_data['totp_seed']}")
         exit(1)
 
+
 def load_config():
     """
     Load Harica configuration from a file in the current directory or the home config
@@ -91,7 +93,6 @@ def load_config():
                 "output_folder": config.get("harica", "output_folder"),
             }
 
-            logger.info(f"Loaded configuration from file: {path}")
             break
 
     # Fallback to env variables
@@ -106,10 +107,12 @@ def load_config():
 
         # Ensure all required environment variables are set
         if not all([config_data["username"], config_data["password"], config_data["totp_seed"]]):
-            logger.error("Configuration file or environment variables missing. "
-                        "Generate config file with 'tcs-garr init' command or set "
-                        "HARICA_USERNAME, HARICA_PASSWORD and HARICA_TOTP_SEED "
-                        "environment variables.")
+            logger.error(
+                "Configuration file or environment variables missing. "
+                "Generate config file with 'tcs-garr init' command or set "
+                "HARICA_USERNAME, HARICA_PASSWORD and HARICA_TOTP_SEED "
+                "environment variables."
+            )
             exit(1)
 
     validate_config(config_data)
@@ -129,10 +132,11 @@ def load_config():
         config_data["output_folder"],
     )
 
+
 def bc_move_previous_config():
     """
     Move an existing config file from the home directory to the new CONFIG_PATH.
-    
+
     This function must be removed in future releases.
     """
     import shutil
@@ -153,6 +157,7 @@ def bc_move_previous_config():
     else:
         logger.debug("No existing config file found to move.")
 
+
 def create_config_file():
     """
     Create the Harica configuration file in the user's home directory.
@@ -163,7 +168,7 @@ def create_config_file():
                 f"Configuration file already exists at {path}. If you want to reinitialize TCS-GARR configuration, delete the file first."
             )
             return
-        
+
     # Create directories that host config file
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
 
@@ -171,10 +176,7 @@ def create_config_file():
     password = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica password: {Style.RESET_ALL}")
     totp_seed = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica TOTP Seed: {Style.RESET_ALL}")
 
-    output_folder = (
-        input(f"{Fore.GREEN}📂 Enter output folder (default is '{OUTPUT_PATH}'): {Style.RESET_ALL}")
-        or OUTPUT_PATH
-    )
+    output_folder = input(f"{Fore.GREEN}📂 Enter output folder (default is '{OUTPUT_PATH}'): {Style.RESET_ALL}") or OUTPUT_PATH
     # Expand in case input was a relative path
     output_folder = os.path.abspath(os.path.expanduser(output_folder))
 
@@ -204,13 +206,23 @@ def validate_domains(harica_client, domains):
         )
 
 
-def list_certificates(harica_client, from_date, to_date):
+def list_certificates(harica_client, expired_since=None, expiring_in=None):
+    current_date = pytz.utc.localize(datetime.now())
+
+    # Set from_date and to_date only if expired_since or expiring_in are provided
+    from_date = current_date - timedelta(days=expired_since) if expired_since is not None else None
+    to_date = current_date + timedelta(days=expiring_in) if expiring_in is not None else None
+
     certificates = harica_client.list_certificates()
     data = []
+
+    # Sort certificates by "certificateValidTo"
     for item in sorted(certificates, key=lambda x: x["certificateValidTo"] if "certificateValidTo" in x else ""):
         expire_date_naive = parser.isoparse(item["certificateValidTo"])
         expire_date = pytz.utc.localize(expire_date_naive)
-        if from_date < expire_date < to_date:
+
+        # Check if the certificate's expiry date is within the range (if range is defined)
+        if (from_date is None or expire_date <= from_date) and (to_date is None or expire_date < to_date):
             status_fields = {
                 "isEidasValidated": item.get("isEidasValidated"),
                 "isExpired": item.get("isExpired"),
@@ -443,13 +455,15 @@ def issue_certificate(harica_client, csr_file):
             if len(alt_names) >= 10:
                 logger.warning(f"{Fore.RED}Warning: Certificates with more than 10 SANs might be refused.{Style.RESET_ALL}")
 
-            domains = set()
-            domains.add(cn)
-            domains.update(alt_names)
+            domains = [cn]
+            for alt_name in alt_names:
+                if alt_name and alt_name not in domains:
+                    domains.append(alt_name)
 
             logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
 
-            cert_id = harica_client.request_certificate(list(domains), csr.public_bytes(serialization.Encoding.PEM).decode())
+            cert_id = harica_client.request_certificate(domains, csr.public_bytes(serialization.Encoding.PEM).decode())
+
             logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
 
             id_file = f"{csr_file}.id"
@@ -486,13 +500,12 @@ def main():
     # Command to list certificates
     list_certificate_cmd = subparser.add_parser("list", help="Generate a report from Harica")
     list_certificate_cmd.add_argument(
-        "--since",
+        "--expired-since",
         type=int,
-        default=10,
-        help="List certificates which expiry date is X days before now. Default is 10.",
+        help="List certificates which expiry date is X days before now.",
     )
     list_certificate_cmd.add_argument(
-        "--to", type=int, default=30, help="List certificates which expiry date is X days after now. Default is 30."
+        "--expiring-in", type=int, help="List certificates which expiry date is X days after now."
     )
 
     # Command to create a certificate
@@ -582,10 +595,7 @@ def main():
             # CSR has been provided
             issue_certificate(harica_client, args.csr)
     elif args.command == "list":
-        current_date = pytz.utc.localize(datetime.now())
-        from_date = current_date - timedelta(days=args.since)
-        to_date = current_date + timedelta(days=args.to)
-        list_certificates(harica_client, from_date, to_date)
+        list_certificates(harica_client, args.expired_since, args.expiring_in)
     elif args.command == "download":
         download_certificate(harica_client, args.id, args.download_type, output_folder, args.output_filename, args.force)
     elif args.command == "approve":

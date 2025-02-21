@@ -1,6 +1,6 @@
 # TCS-GARR Client
 
-![Version](https://img.shields.io/badge/Version-0.7.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-0.8.0-brightgreen.svg)
 
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
@@ -77,9 +77,9 @@ After installation, the first time you run the client, you will need to initiali
 tcs-garr init
 ```
 
-This will create a `tcs-garr.conf` file in your home directory. This file will contain your Harica username, password, TOTP seed, and folder for issued certificates and will have secure permissions.
+This will create a `tcs-garr.conf` file in your home directory under `.config/tcs-garr` path. This file will contain your Harica username, password, TOTP seed, and folder for issued certificates and will have secure permissions.
 
-The script will look for this configuration file in the current directory and the home directory. If not found, it will notify you to initialize the configuration using the `tcs-garr init` command.
+If configuration file is not found, system will notify you to initialize the configuration using the `tcs-garr init` command.
 
 ## Usage
 
@@ -137,15 +137,17 @@ options:
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--since SINCE] [--to TO]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN]
 
-    options:
-    -h, --help     show this help message and exit
-    --since SINCE  List certificates which expiry date is X days before now. Default is 10.
-    --to TO        List certificates which expiry date is X days after now. Default is 30.
+   options:
+   -h, --help            show this help message and exit
+   --expired-since EXPIRED_SINCE
+                           List certificates which expiry date is X days before now.
+   --expiring-in EXPIRING_IN
+                           List certificates which expiry date is X days after now.
    ```
 
-   This command will list all available certificates. You can filter them by date range using the `--since` and `--to` options.
+   This command will list all available certificates. You can filter them by date range using the `--expired-since` and `--expiring-in` options.
 
 4. **Download a certificate**:
 

@@ -181,3 +181,4 @@ issued_certificates/*.pem
 issued_certificates/*.cer
 issued_certificates/*.p12
 tcs-garr.conf
+harica_certificates
