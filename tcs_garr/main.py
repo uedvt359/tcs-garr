@@ -455,13 +455,14 @@ def issue_certificate(harica_client, csr_file):
             if len(alt_names) >= 10:
                 logger.warning(f"{Fore.RED}Warning: Certificates with more than 10 SANs might be refused.{Style.RESET_ALL}")
 
-            domains = set()
-            domains.add(cn)
-            domains.update(alt_names)
+            domains = [cn]
+            for alt_name in alt_names:
+                if alt_name and alt_name not in domains:
+                    domains.append(alt_name)
 
             logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
 
-            cert_id = harica_client.request_certificate(list(domains), csr.public_bytes(serialization.Encoding.PEM).decode())
+            cert_id = harica_client.request_certificate(domains, csr.public_bytes(serialization.Encoding.PEM).decode())
 
             logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
             logger.info(

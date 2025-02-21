@@ -197,13 +197,19 @@ class HaricaClient:
             list: List of domain dictionaries with validation details.
         """
         domains_info = []
+        processed_domains = set()
+
         for dom in domains:
-            if dom in [f"www.{d}" for d in domains]:
+            # Check if this is a 'www.' domain and skip if its non-www version has been processed
+            base_domain = dom.replace("www.", "")
+
+            if base_domain in processed_domains:
                 continue
+
             domain_info = {
                 "isWildcard": "*" in dom,
-                "domain": dom.replace("www.", ""),
-                "includeWWW": dom.startswith("www."),
+                "domain": base_domain,
+                "includeWWW": f"www.{base_domain}" in domains,
                 "isPrevalidated": True,
                 "isValid": True,
                 "isFreeDomain": True,
@@ -214,6 +220,7 @@ class HaricaClient:
                 "errorMessage": "",
                 "warningMessage": "",
             }
+            processed_domains.add(base_domain)
             domains_info.append(domain_info)
 
         return domains_info
