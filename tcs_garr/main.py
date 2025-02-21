@@ -6,6 +6,7 @@ import configparser
 import getpass
 import logging
 import os
+import re
 from datetime import datetime, timedelta
 
 import pytz
@@ -18,9 +19,11 @@ from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
 from dateutil import parser
 from tabulate import tabulate
+from importlib.metadata import version
 
 from .harica_client import HaricaClient
 from .exceptions import NoHaricaAdminException, NoHaricaApproverException
+from .utils import generate_otp
 
 # Set up logging
 logger = logging.getLogger()
@@ -33,68 +36,128 @@ console.setFormatter(logging.Formatter("%(message)s"))
 logger.addHandler(console)
 
 CONFIG_FILENAME = "tcs-garr.conf"
+CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".config", "tcs-garr", CONFIG_FILENAME)
 OUTPUT_FOLDER = "harica_certificates"
+OUTPUT_PATH = os.path.join(os.path.expanduser("~"), OUTPUT_FOLDER)
+CONFIG_PATHS = [
+    os.path.join(os.getcwd(), CONFIG_FILENAME),
+    CONFIG_PATH,
+]
 
+def validate_config(config_data):
+    """
+    Validates that all required configuration fields are present and correct.
+
+    :param config_data: Dictionary containing configuration values.
+    """
+    missing_fields = [key for key, value in config_data.items() if not value]
+    if missing_fields:
+        logger.error(f"❌ Missing configuration values for: {', '.join(missing_fields)}")
+        exit(1)
+
+    # Validate email
+    pattern = r"^[\w\.-]+@[\w\.-]+\.\w+$"
+    valid = re.match(pattern, config_data["username"])
+    if not valid:
+        logger.error(f"❌ Invalid email format for username: {config_data['username']}")
+        exit(1)
+
+    # Validate TOTP seed
+    try:
+        generate_otp(config_data["totp_seed"])
+    except ValueError:
+        logger.error(f"❌ Invalid TOTP seed: {config_data['totp_seed']}")
+        exit(1)
 
 def load_config():
     """
-    Load Harica configuration from a file in the current directory or the home directory.
+    Load Harica configuration from a file in the current directory or the home config
+    directory. Fallback to environment variables if file does not exists.
+
 
     :return: (username, password, totp_seed, output_folder) tuple
     """
-    paths = [
-        os.path.join(os.getcwd(), CONFIG_FILENAME),
-        os.path.join(os.path.expanduser("~"), CONFIG_FILENAME),
-    ]
-    for path in paths:
+    config_data = None
+
+    for path in CONFIG_PATHS:
         if os.path.exists(path):
             config = configparser.RawConfigParser()
             config.read(path)
-            username = config.get("harica", "username")
-            password = config.get("harica", "password")
-            totp_seed = config.get("harica", "totp_seed")
-            output_folder = config.get("harica", "output_folder")
 
-            # Set log file path
-            log_file = os.path.join(output_folder, "harica.log")
-            os.makedirs(os.path.dirname(log_file), exist_ok=True)
-            file_handler = logging.FileHandler(log_file)
-            file_handler.setLevel(logging.DEBUG)
-            file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S"))
-            logger.addHandler(file_handler)
+            config_data = {
+                "username": config.get("harica", "username"),
+                "password": config.get("harica", "password"),
+                "totp_seed": config.get("harica", "totp_seed"),
+                "output_folder": config.get("harica", "output_folder"),
+            }
 
-            return username, password, totp_seed, output_folder
+            logger.info(f"Loaded configuration from file: {path}")
+            break
 
-    logger.error("Configuration file missing. You can generate it with 'tcs-garr init' command.")
-    exit(1)
+    # Fallback to env variables
+    if config_data is None:
+        logger.info("No config file found. Falling back to environment variables.")
+        config_data = {
+            "username": os.getenv("HARICA_USERNAME"),
+            "password": os.getenv("HARICA_PASSWORD"),
+            "totp_seed": os.getenv("HARICA_TOTP_SEED"),
+            "output_folder": os.getenv("HARICA_OUTPUT_FOLDER", OUTPUT_PATH),
+        }
+
+        # Ensure all required environment variables are set
+        if not all([config_data["username"], config_data["password"], config_data["totp_seed"]]):
+            logger.error("Configuration file or environment variables missing. "
+                        "Generate config file with 'tcs-garr init' command or set "
+                        "HARICA_USERNAME, HARICA_PASSWORD and HARICA_TOTP_SEED "
+                        "environment variables.")
+            exit(1)
+
+    validate_config(config_data)
+
+    # Set log file path
+    log_file = os.path.join(config_data["output_folder"], "harica.log")
+    os.makedirs(os.path.dirname(log_file), exist_ok=True)
+    file_handler = logging.FileHandler(log_file)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s: %(message)s", "%Y-%m-%d %H:%M:%S"))
+    logger.addHandler(file_handler)
+
+    return (
+        config_data["username"],
+        config_data["password"],
+        config_data["totp_seed"],
+        config_data["output_folder"],
+    )
 
 
 def create_config_file():
     """
     Create the Harica configuration file in the user's home directory.
     """
-    paths = [
-        os.path.join(os.getcwd(), CONFIG_FILENAME),
-        os.path.join(os.path.expanduser("~"), CONFIG_FILENAME),
-    ]
-    for path in paths:
+    for path in CONFIG_PATHS:
         if os.path.exists(path):
             logger.warning(
                 f"Configuration file already exists at {path}. If you want to reinitialize TCS-GARR configuration, delete the file first."
             )
             return
+        
+    # Check if the directory exists, if not, create it
+    config_dir = os.path.dirname(CONFIG_PATH)
+
+    if not os.path.exists(config_dir):
+        os.makedirs(config_dir)
 
     username = input(f"{Fore.GREEN}👤 Enter Harica email: {Style.RESET_ALL}")
     password = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica password: {Style.RESET_ALL}")
     totp_seed = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica TOTP Seed: {Style.RESET_ALL}")
 
-    default_output_folder = os.path.join(os.path.expanduser("~"), OUTPUT_FOLDER)
     output_folder = (
-        input(f"{Fore.GREEN}📂 Enter output folder (default is '{default_output_folder}'): {Style.RESET_ALL}")
-        or default_output_folder
+        input(f"{Fore.GREEN}📂 Enter output folder (default is '{OUTPUT_PATH}'): {Style.RESET_ALL}")
+        or OUTPUT_PATH
     )
+    # Expand in case input was a relative path
+    output_folder = os.path.abspath(os.path.expanduser(output_folder))
 
-    config_path = os.path.join(os.path.expanduser("~"), CONFIG_FILENAME)
     config = configparser.RawConfigParser()
     config["harica"] = {
         "username": username,
@@ -102,10 +165,10 @@ def create_config_file():
         "totp_seed": totp_seed,
         "output_folder": output_folder,
     }
-    with open(config_path, "w") as configfile:
+    with open(CONFIG_PATH, "w") as configfile:
         config.write(configfile)
-    os.chmod(config_path, 0o400)
-    logger.info(f"✨ Configuration file created at {config_path}")
+    os.chmod(CONFIG_PATH, 0o400)
+    logger.info(f"✨ Configuration file created at {CONFIG_PATH}")
 
 
 def whoami(harica_client):
@@ -388,7 +451,11 @@ def main():
     parser = argparse.ArgumentParser(description="Harica Certificate Manager")
 
     parser.add_argument("--debug", action="store_true", default=False, help="Enable DEBUG logging.")
-
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=version("tcs-garr"),
+    )
     subparser = parser.add_subparsers(dest="command")
 
     # Command to list certificates
