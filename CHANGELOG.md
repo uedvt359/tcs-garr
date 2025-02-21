@@ -1,3 +1,9 @@
+## 0.10.0 (2025-02-21)
+
+### Feat
+
+- raise custom exception if downloading a pending cert
+
 ## 0.9.0 (2025-02-21)
 
 ### Feat
