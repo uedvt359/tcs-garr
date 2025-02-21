@@ -46,6 +46,12 @@ publish_gitlab:
   only:
     - main
 
+do_nothing:
+  stage: mr-wa
+  script: echo "Dummy job for merge-request. For info check https://stackoverflow.com/a/73333320"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+
 publish_pypi:
   stage: publish
   script:
