@@ -450,8 +450,13 @@ def issue_certificate(harica_client, csr_file):
             logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
 
             cert_id = harica_client.request_certificate(list(domains), csr.public_bytes(serialization.Encoding.PEM).decode())
-
             logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
+
+            id_file = f"{csr_file}.id"
+            with open(id_file, "w") as id_f:
+                id_f.write(cert_id)
+            logger.info(f"{Fore.GREEN}Certificate ID written to {id_file}.{Style.RESET_ALL}")
+
             logger.info(
                 f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}"
             )
