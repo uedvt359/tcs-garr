@@ -7,7 +7,7 @@ import jwt
 import requests
 from bs4 import BeautifulSoup
 
-from .exceptions import NoHaricaAdminException, NoHaricaApproverException
+from .exceptions import NoHaricaAdminException, NoHaricaApproverException, CertificateNotApprovedException
 
 from .utils import generate_otp
 
@@ -169,20 +169,27 @@ class HaricaClient:
         Returns:
             dict: The certificate details.
         """
+        pending_certs = self.list_certificates(status="Pending")
+
+        for pc in pending_certs:
+            if pc.get('transactionId') == certificate_id:
+                raise CertificateNotApprovedException
+
         # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
         response_data = self.__make_post_request(
             "/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id}
         ).json()
+        
         return response_data
 
-    def list_certificates(self):
+    def list_certificates(self, status="Valid"):
         """
         Retrieves a list of valid certificates.
 
         Returns:
             dict: List of certificates.
         """
-        json_payload = {"startIndex": 0, "status": "Valid", "filterPostDTOs": []}
+        json_payload = {"startIndex": 0, "status": status, "filterPostDTOs": []}
         data = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLTransactions", data=json_payload).json()
         return data
 
