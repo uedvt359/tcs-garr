@@ -1,3 +1,10 @@
+## 0.7.1 (2025-02-21)
+
+### Fix
+
+- Fix cn and alt_names order
+- Fix list certificate with filters expired-since and expiring-in
+
 ## 0.7.0 (2025-02-21)
 
 ### Feat
