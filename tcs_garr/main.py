@@ -129,6 +129,29 @@ def load_config():
         config_data["output_folder"],
     )
 
+def bc_move_previous_config():
+    """
+    Move an existing config file from the home directory to the new CONFIG_PATH.
+    
+    This function must be removed in future releases.
+    """
+    import shutil
+
+    old_config_path = os.path.join(os.path.expanduser("~"), CONFIG_FILENAME)
+
+    # Check if the old config file exists
+    if os.path.exists(old_config_path):
+        # Create directories that host config file
+        os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+
+        # Move the config file
+        try:
+            shutil.move(old_config_path, CONFIG_PATH)
+            logger.debug("Moved existing config.")
+        except Exception as e:
+            logger.error(f"Failed to move config: {e}")
+    else:
+        logger.debug("No existing config file found to move.")
 
 def create_config_file():
     """
@@ -141,11 +164,8 @@ def create_config_file():
             )
             return
         
-    # Check if the directory exists, if not, create it
-    config_dir = os.path.dirname(CONFIG_PATH)
-
-    if not os.path.exists(config_dir):
-        os.makedirs(config_dir)
+    # Create directories that host config file
+    os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
 
     username = input(f"{Fore.GREEN}👤 Enter Harica email: {Style.RESET_ALL}")
     password = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica password: {Style.RESET_ALL}")
@@ -526,6 +546,8 @@ def main():
     cancel_cmd.add_argument("--id", required=True, help="ID of the request to cancel.")
 
     args = parser.parse_args()
+
+    bc_move_previous_config()
 
     if args.command == "init":
         create_config_file()
