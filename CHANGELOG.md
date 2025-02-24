@@ -1,3 +1,9 @@
+## 0.11.0 (2025-02-24)
+
+### Feat
+
+- Add request of DV certificate
+
 ## 0.10.1 (2025-02-21)
 
 ### Fix
