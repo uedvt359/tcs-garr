@@ -37,7 +37,7 @@ WORKDIR /app
 COPY --from=builder /app/dist/*.whl ./
 
 # Install tcs-garr package
-RUN pip install --no-cache-dir ./*.whl && rm ./*.whl
+RUN pip install --no-cache-dir ./*.whl && rm ./*.whl && chown -R tcs:tcs /app
 
 USER tcs
 
