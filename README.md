@@ -173,10 +173,11 @@ options:
    ```bash
    tcs-garr request --help
 
-   usage: tcs-garr request [-h] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
+   usage: tcs-garr request [-h] [--profile {OV,DV}] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
 
    options:
    -h, --help            show this help message and exit
+   --profile {OV,DV}     Profile to use between OV or DV. Default. OV
    --csr CSR             Path to an existing CSR file.
    --cn CN               Common name of the certificate.
    --alt_names ALT_NAMES
@@ -185,12 +186,10 @@ options:
 
    The `request` command is used to submit a new certificate request to Harica.
 
-   &nbsp;
-
    You can either provide an existing Certificate Signing Request (`--csr`) or specify the details for generating a new CSR, including the Common Name (`--cn`) and any Subject Alternative Names (`--alt_names`).
    If a new CSR is created using the `--cn` and `--alt_names` options, a private key will also be automatically generated.
 
-   &nbsp;
+   You can choose between the `OV` (OV Profile) or `DV` (DV Profile) profile using the `--profile` option. Default is `OV`.
 
    After submitting the certificate request, the request must be approved by another Administrator before the certificate can be downloaded. Ensure that an administrator is available to review and approve your request.
 

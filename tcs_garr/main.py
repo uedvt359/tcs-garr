@@ -443,7 +443,7 @@ def generate_key_csr(harica_client, cn, alt_names, output_folder):
     return csr_path
 
 
-def issue_certificate(harica_client, csr_file):
+def issue_certificate(harica_client, csr_file, profile):
     try:
         with open(csr_file, "rb") as f:
             csr = x509.load_pem_x509_csr(f.read(), default_backend())
@@ -462,7 +462,9 @@ def issue_certificate(harica_client, csr_file):
 
             logger.info(f"{Fore.YELLOW}Submitting CSR to Harica... Please wait...{Style.RESET_ALL}")
 
-            cert_id = harica_client.request_certificate(domains, csr.public_bytes(serialization.Encoding.PEM).decode())
+            cert_id = harica_client.request_certificate(
+                domains, csr.public_bytes(serialization.Encoding.PEM).decode(), profile
+            )
 
             logger.info(f"{Fore.GREEN}CSR submitted with certificate ID {cert_id}.{Style.RESET_ALL}")
 
@@ -510,6 +512,10 @@ def main():
 
     # Command to create a certificate
     create_cmd = subparser.add_parser("request", help="Request a new certificate")
+
+    create_cmd.add_argument(
+        "--profile", default="OV", choices=["OV", "DV"], help="Profile to use between OV or DV. Default: OV"
+    )
 
     # Create a mutually exclusive group for --csr and --cn (plus optional --alt_names)
     create_group = create_cmd.add_mutually_exclusive_group(required=True)
@@ -590,10 +596,10 @@ def main():
 
         if args.cn:
             csr_path = generate_key_csr(harica_client, args.cn, args.alt_names, output_folder)
-            issue_certificate(harica_client, csr_path)
+            issue_certificate(harica_client, csr_path, args.profile)
         else:
             # CSR has been provided
-            issue_certificate(harica_client, args.csr)
+            issue_certificate(harica_client, args.csr, args.profile)
     elif args.command == "list":
         list_certificates(harica_client, args.expired_since, args.expiring_in)
     elif args.command == "download":

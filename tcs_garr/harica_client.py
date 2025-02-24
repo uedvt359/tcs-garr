@@ -174,14 +174,14 @@ class HaricaClient:
 
         for pc in pending_certs:
             # Check also pc.get("transactionStatus"). Better safe than sorry.
-            if pc.get('transactionId') == certificate_id and pc.get("transactionStatus") == "Pending":
+            if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == "Pending":
                 raise CertificateNotApprovedException
 
         # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
         response_data = self.__make_post_request(
             "/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id}
         ).json()
-        
+
         return response_data
 
     def list_certificates(self, status="Valid"):
@@ -195,10 +195,7 @@ class HaricaClient:
         Returns:
             dict: List of certificates.
         """
-        status_mapping = {
-            "Valid": "GetSSLTransactions",
-            "Pending": "GetSSLReviewableTransactions"
-        }
+        status_mapping = {"Valid": "GetSSLTransactions", "Pending": "GetSSLReviewableTransactions"}
 
         json_payload = {"startIndex": 0, "status": status, "filterPostDTOs": []}
         data = self.__make_post_request(f"/api/OrganizationValidatorSSL/{status_mapping[status]}", data=json_payload).json()
@@ -257,7 +254,7 @@ class HaricaClient:
         data = self.__make_post_request("/api/ServerCertificate/CheckMachingOrganization", data=domains_info).json()
         return data
 
-    def request_certificate(self, domains, csr):
+    def request_certificate(self, domains, csr, transactionType="OV"):
         """
         Requests a new server certificate based on the provided domains and CSR.
 
@@ -274,7 +271,7 @@ class HaricaClient:
             raise ValueError("No available organization for this domain list")
 
         if len(organizations) > 1:
-            raise ValueError("Multiple organizations found. Specify one using '-O org'")
+            raise ValueError("Multiple organizations found.'")
 
         organization = organizations[0]
 
@@ -299,12 +296,14 @@ class HaricaClient:
             "domainsString": (None, json.dumps(domains_info)),
             "csr": (None, csr),
             "duration": (None, "1"),
-            "transactionType": (None, "OV"),
+            "transactionType": (None, transactionType),
             "friendlyName": (None, domains[0]),
             "isManualCSR": (None, "true"),
             "consentSameKey": (None, "true"),
-            "organizationDN": (None, orgDN),
         }
+        if transactionType == "OV":
+            payload["organizationDN"] = (None, orgDN)
+
         data = self.__make_post_request(
             "/api/ServerCertificate/RequestServerCertificate", data=payload, content_type="multipart/form-data"
         )
