@@ -18,12 +18,12 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
 from dateutil import parser
+from packaging import version
 from tabulate import tabulate
-from importlib.metadata import version
 
-from .harica_client import HaricaClient
 from .exceptions import NoHaricaAdminException, NoHaricaApproverException
-from .utils import generate_otp
+from .harica_client import HaricaClient
+from .utils import check_pypi_version, generate_otp, get_current_version, upgrade_package
 
 # Set up logging
 logger = logging.getLogger()
@@ -196,6 +196,18 @@ def create_config_file():
 def whoami(harica_client):
     user = harica_client.get_logged_in_user_profile()
     logger.info(f"{Fore.GREEN}👤 Logged in as {user['fullName']} ({user['email']}){Style.RESET_ALL}")
+
+
+def self_upgrade_package():
+    current_version = get_current_version()
+    latest_version = check_pypi_version()
+
+    if version.parse(latest_version) > version.parse(current_version):
+        logger.info(f"Upgrading from {current_version} to {latest_version}...")
+        upgrade_package()
+        logger.info(f"Successfully upgraded to {latest_version}")
+    else:
+        logger.info(f"Already at the latest version: {current_version}")
 
 
 def validate_domains(harica_client, domains):
@@ -484,6 +496,7 @@ def issue_certificate(harica_client, csr_file, profile):
         logger.error(f"{Fore.RED}CSR file {csr_file} not found.{Style.RESET_ALL}")
         exit(1)
 
+
 def generate_k8s_secret(cert_path, key_path, namespace, output_folder):
     """
     Generates a Kubernetes secret YAML file for the given certificate and key files.
@@ -510,7 +523,7 @@ data:
       {key_b64}
 """
 
-    output_file = os.path.join(output_folder, f"{name}.yml")    
+    output_file = os.path.join(output_folder, f"{name}.yml")
     with open(output_file, "w") as f:
         f.write(secret_yaml)
 
@@ -527,9 +540,12 @@ def main():
     parser.add_argument(
         "--version",
         action="version",
-        version=version("tcs-garr"),
+        version=get_current_version(),
     )
     subparser = parser.add_subparsers(dest="command")
+
+    # Command to self upgrade package
+    subparser.add_parser("upgrade", help="Self-upgrade command for the app.")
 
     # Command to list certificates
     list_certificate_cmd = subparser.add_parser("list", help="Generate a report from Harica")
@@ -613,6 +629,10 @@ def main():
 
     if args.command == "init":
         create_config_file()
+        return
+
+    if args.command == "upgrade":
+        self_upgrade_package()
         return
 
     username, password, totp_seed, output_folder = load_config()

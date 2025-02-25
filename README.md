@@ -237,6 +237,17 @@ options:
 
    This command generates validation tokens for the specified domains. Replace `DOMAINS` with a comma-separated list of domains you need to validate.
 
+9. **Upgrade package**:
+
+   ```bash
+   usage: tcs-garr upgrade [-h]
+
+   options:
+   -h, --help  show this help message and exit
+   ```
+
+   This command upgrades the package to the latest version.
+
 ## Docker
 
 ### Build
@@ -249,7 +260,7 @@ docker build -t tcs-garr:latest .
 
 ### Environment variables
 
-|         Name         |            Description             |     Default Value     |
+| Name                 | Description                        | Default Value         |
 | -------------------- | ---------------------------------- | --------------------- |
 | HARICA_USERNAME      | Username for HARICA authentication | None                  |
 | HARICA_PASSWORD      | Password for HARICA authentication | None                  |
