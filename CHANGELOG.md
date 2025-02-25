@@ -1,3 +1,13 @@
+## 0.12.0 (2025-02-25)
+
+### Feat
+
+- ability to generate k8s tls resource
+
+### Fix
+
+- docker chown workdir
+
 ## 0.11.0 (2025-02-24)
 
 ### Feat
