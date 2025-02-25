@@ -237,6 +237,47 @@ options:
 
    This command generates validation tokens for the specified domains. Replace `DOMAINS` with a comma-separated list of domains you need to validate.
 
+## Docker
+
+### Build
+
+Example of docker image build command:
+
+```bash
+docker build -t tcs-garr:latest .
+```
+
+### Environment variables
+
+|         Name         |            Description             |     Default Value     |
+| -------------------- | ---------------------------------- | --------------------- |
+| HARICA_USERNAME      | Username for HARICA authentication | None                  |
+| HARICA_PASSWORD      | Password for HARICA authentication | None                  |
+| HARICA_TOTP_SEED     | TOTP seed for two-factor auth      | None                  |
+| HARICA_OUTPUT_FOLDER | Directory for output files         | ~/harica_certificates |
+
+### Run
+
+Use the image like this:
+
+```bash
+docker run --name tcs-garr tcs-garr:latest --version
+```
+
+Or a more complex example can be:
+
+```bash
+docker run --name tcs-garr \
+  -e HARICA_USERNAME=${HARICA_USERNAME} \
+  -e HARICA_PASSWORD=${HARICA_PASSWORD} \
+  -e HARICA_TOTP_SEED=${HARICA_TOTP_SEED} \
+  -e HARICA_OUTPUT_FOLDER=${HARICA_OUTPUT_FOLDER} \
+  -v ${HARICA_OUTPUT_FOLDER}:${HARICA_OUTPUT_FOLDER} \
+  tcs-garr:latest request --cn <domain> --alt_names <alt_names>
+```
+
+The entrypoint is already set to `tcs-garr`, so just add arguments or options.
+
 ## License
 
 This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
