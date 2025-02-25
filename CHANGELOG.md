@@ -1,3 +1,9 @@
+## 0.13.0 (2025-02-25)
+
+### Feat
+
+- Add self upgrade command
+
 ## 0.12.0 (2025-02-25)
 
 ### Feat
