@@ -484,6 +484,38 @@ def issue_certificate(harica_client, csr_file, profile):
         logger.error(f"{Fore.RED}CSR file {csr_file} not found.{Style.RESET_ALL}")
         exit(1)
 
+def generate_k8s_secret(cert_path, key_path, namespace, output_folder):
+    """
+    Generates a Kubernetes secret YAML file for the given certificate and key files.
+    """
+    name = os.path.splitext(os.path.basename(key_path))[0]
+
+    with open(cert_path, "r") as cert_file:
+        cert_b64 = base64.b64encode(cert_file.read().encode("utf-8")).decode("utf-8")
+
+    with open(key_path, "r") as key_file:
+        key_b64 = base64.b64encode(key_file.read().encode("utf-8")).decode("utf-8")
+
+    secret_yaml = f"""---
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/tls
+metadata:
+  name: {name}-tls
+  namespace: {namespace}
+data:
+  tls.crt: >-
+      {cert_b64}
+  tls.key: >-
+      {key_b64}
+"""
+
+    output_file = os.path.join(output_folder, f"{name}.yml")    
+    with open(output_file, "w") as f:
+        f.write(secret_yaml)
+
+    logger.info(f"{Fore.GREEN}Kubernetes secret YAML generated at {output_file}.{Style.RESET_ALL}")
+
 
 def main():
     """
@@ -569,6 +601,12 @@ def main():
     cancel_cmd = subparser.add_parser("cancel", help="Cancel a request by ID")
     cancel_cmd.add_argument("--id", required=True, help="ID of the request to cancel.")
 
+    # Generate Kubernetes tls resource file
+    k8s_cmd = subparser.add_parser("k8s", help="Generate Kubernetes tls resource file")
+    k8s_cmd.add_argument("--cert", required=True, help="Path to the certificate file.")
+    k8s_cmd.add_argument("--key", required=True, help="Path to the key file.")
+    k8s_cmd.add_argument("--namespace", required=True, help="Kubernetes namespace for the secret.")
+
     args = parser.parse_args()
 
     bc_move_previous_config()
@@ -619,6 +657,8 @@ def main():
         validate_domains(harica_client, args.domains.split(","))
     elif args.command == "cancel":
         cancel_transaction(harica_client, args.id)
+    elif args.command == "k8s":
+        generate_k8s_secret(args.cert, args.key, args.namespace, output_folder)
 
 
 if __name__ == "__main__":

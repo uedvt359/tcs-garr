@@ -99,7 +99,7 @@ usage: tcs-garr [-h] [--debug] {list,request,init,download,approve,whoami,valida
 Harica Certificate Manager
 
 positional arguments:
-  {list,request,init,download,approve,whoami,validate,domains,cancel}
+  {list,request,init,download,approve,whoami,validate,domains,cancel,k8s}
     list                Generate a report from Harica
     request             Request a new certificate
     init                Generate Harica config file
@@ -109,10 +109,12 @@ positional arguments:
     validate            Create validation token for domains
     domains             List available domains
     cancel              Cancel a request by ID
+    k8s                 Generate Kubernetes tls resource file
 
 options:
   -h, --help            show this help message and exit
   --debug               Enable DEBUG logging.
+  --version             show program's version number and exit
 ```
 
 ### Available Commands
