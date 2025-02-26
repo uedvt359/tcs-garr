@@ -71,14 +71,14 @@ def validate_config(config_data):
         exit(1)
 
 
-def load_config():
+def load_config(environment="production"):
     """
-    Load Harica configuration from a file in the current directory or the home config
-    directory. Fallback to environment variables if file does not exists.
-
-
-    :return: (username, password, totp_seed, output_folder) tuple
+    Load Harica configuration based on the environment.
     """
+
+    # Determine the section name based on the environment
+    section_name = f"harica-{environment}" if environment != "production" else "harica"
+
     config_data = None
 
     for path in CONFIG_PATHS:
@@ -86,16 +86,19 @@ def load_config():
             config = configparser.RawConfigParser()
             config.read(path)
 
-            config_data = {
-                "username": config.get("harica", "username"),
-                "password": config.get("harica", "password"),
-                "totp_seed": config.get("harica", "totp_seed"),
-                "output_folder": config.get("harica", "output_folder"),
-            }
-
+            if config.has_section(section_name):
+                config_data = {
+                    "username": config.get(section_name, "username"),
+                    "password": config.get(section_name, "password"),
+                    "totp_seed": config.get(section_name, "totp_seed"),
+                    "output_folder": config.get(section_name, "output_folder"),
+                }
+            else:
+                logger.error(f"No configuration found for environment '{environment}' in {path}")
+                exit(1)
             break
 
-    # Fallback to env variables
+    # Fallback to env variables if no config file
     if config_data is None:
         logger.info("No config file found. Falling back to environment variables.")
         config_data = {
@@ -158,19 +161,30 @@ def bc_move_previous_config():
         logger.debug("No existing config file found to move.")
 
 
-def create_config_file():
+def create_config_file(environment="production", force=False):
     """
-    Create the Harica configuration file in the user's home directory.
+    Create or update the Harica configuration file in the user's home directory
+    for the specified environment.
     """
-    for path in CONFIG_PATHS:
-        if os.path.exists(path):
-            logger.warning(
-                f"Configuration file already exists at {path}. If you want to reinitialize TCS-GARR configuration, delete the file first."
-            )
-            return
+    config = configparser.RawConfigParser()
+
+    # Check if the configuration file exists
+    if os.path.exists(CONFIG_PATH):
+        config.read(CONFIG_PATH)  # Read existing configuration file
 
     # Create directories that host config file
     os.makedirs(os.path.dirname(CONFIG_PATH), exist_ok=True)
+
+    # Set the section name based on the environment
+    section_name = f"harica-{environment}" if environment != "production" else "harica"
+
+    # Check if section already exists
+    if config.has_section(section_name) and not force:
+        logger.warning(
+            f"Configuration for '{environment}' environment already exists in {CONFIG_PATH}. "
+            f"If you want to reinitialize the configuration, use the --force option."
+        )
+        return
 
     username = input(f"{Fore.GREEN}👤 Enter Harica email: {Style.RESET_ALL}")
     password = getpass.getpass(f"{Fore.GREEN}🔒 Enter Harica password: {Style.RESET_ALL}")
@@ -180,8 +194,7 @@ def create_config_file():
     # Expand in case input was a relative path
     output_folder = os.path.abspath(os.path.expanduser(output_folder))
 
-    config = configparser.RawConfigParser()
-    config["harica"] = {
+    config[section_name] = {
         "username": username,
         "password": password,
         "totp_seed": totp_seed,
@@ -189,8 +202,10 @@ def create_config_file():
     }
     with open(CONFIG_PATH, "w") as configfile:
         config.write(configfile)
-    os.chmod(CONFIG_PATH, 0o400)
-    logger.info(f"✨ Configuration file created at {CONFIG_PATH}")
+
+    os.chmod(CONFIG_PATH, 0o600)
+
+    logger.info(f"✨ Configuration for '{environment}' environment updated at {CONFIG_PATH}")
 
 
 def whoami(harica_client):
@@ -544,6 +559,13 @@ def main():
     )
     subparser = parser.add_subparsers(dest="command")
 
+    parser.add_argument(
+        "--environment",
+        choices=["production", "stg"],
+        default="production",
+        help="Specify the environment to use (default: production)",
+    )
+
     # Command to self upgrade package
     subparser.add_parser("upgrade", help="Self-upgrade command for the app.")
 
@@ -574,7 +596,8 @@ def main():
     create_cmd.add_argument("--alt_names", default="", help="Comma-separated alternative names (only used with --cn).")
 
     # Command to generate config file
-    subparser.add_parser("init", help="Generate Harica config file")
+    init_cmd = subparser.add_parser("init", help="Generate Harica config file")
+    init_cmd.add_argument("--force", "-f", action="store_true", help="Force overwrite configuration file.")
 
     # Command to download a certificate by ID
     get_certificate_cmd = subparser.add_parser("download", help="Download a certificate by ID")
@@ -628,17 +651,17 @@ def main():
     bc_move_previous_config()
 
     if args.command == "init":
-        create_config_file()
+        create_config_file(args.environment, args.force)
         return
 
     if args.command == "upgrade":
         self_upgrade_package()
         return
 
-    username, password, totp_seed, output_folder = load_config()
+    username, password, totp_seed, output_folder = load_config(args.environment)
 
     try:
-        harica_client = HaricaClient(username, password, totp_seed)
+        harica_client = HaricaClient(username, password, totp_seed, environment=args.environment)
     except NoHaricaAdminException:
         logger.error(f"{Fore.RED}No Harica Admin role found in the user profile.{Style.RESET_ALL}")
         exit(1)
