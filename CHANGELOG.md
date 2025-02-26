@@ -1,3 +1,9 @@
+## 0.15.1 (2025-02-26)
+
+### Fix
+
+- Bump cryptography packages to 43.0.1 https://openssl-library.org/news/secadv/20240903.txt
+
 ## 0.15.0 (2025-02-26)
 
 ### Feat
