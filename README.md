@@ -187,11 +187,12 @@ tcs-garr --environment stg init
    ```bash
    tcs-garr request --help
 
-   usage: tcs-garr request [-h] [--profile {OV,DV}] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
+   usage: tcs-garr request [-h] [--profile {OV,DV}] [--wait] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
 
    options:
    -h, --help            show this help message and exit
-   --profile {OV,DV}     Profile to use between OV or DV. Default. OV
+   --profile {OV,DV}     Profile to use between OV or DV. Default: OV
+   --wait                Wait for the certificate to be approved
    --csr CSR             Path to an existing CSR file.
    --cn CN               Common name of the certificate.
    --alt_names ALT_NAMES
@@ -206,6 +207,8 @@ tcs-garr --environment stg init
    You can choose between the `OV` (OV Profile) or `DV` (DV Profile) profile using the `--profile` option. Default is `OV`.
 
    After submitting the certificate request, the request must be approved by another Administrator before the certificate can be downloaded. Ensure that an administrator is available to review and approve your request.
+
+   With `--wait`` flag, the command will wait for the certificate to be approved by another administrator. When approved, it will be automatically downloaded.
 
 6. **Approve a certificate**:
 

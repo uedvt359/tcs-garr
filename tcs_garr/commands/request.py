@@ -1,3 +1,4 @@
+import base64
 from colorama import Fore, Style
 from tcs_garr.commands.base import BaseCommand
 from cryptography import x509
@@ -6,8 +7,10 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 import os
-
+import time
+from tcs_garr.exceptions import CertificateNotApprovedException
 from tcs_garr.utils import load_config
+from cryptography.hazmat.primitives.serialization import pkcs7
 
 
 class RequestCommand(BaseCommand):
@@ -43,6 +46,7 @@ class RequestCommand(BaseCommand):
         - --csr: Path to an existing CSR file.
         - --cn: Common Name for the certificate (used when no CSR is provided).
         - --alt_names: Comma-separated list of alternative names (used with --cn).
+        - --wait: Wait for the certificate to be approved (polling).
 
         Args:
             parser (argparse.ArgumentParser): The argument parser to configure.
@@ -51,6 +55,8 @@ class RequestCommand(BaseCommand):
         self.parser.add_argument(
             "--profile", default="OV", choices=["OV", "DV"], help="Profile to use between OV or DV. Default: OV"
         )
+
+        self.parser.add_argument("--wait", action="store_true", help="Wait for the certificate to be approved")
 
         # Create a mutually exclusive group for --csr and --cn (plus optional --alt_names)
         create_group = self.parser.add_mutually_exclusive_group(required=True)
@@ -92,10 +98,13 @@ class RequestCommand(BaseCommand):
         if self.args.cn:
             # Generate a CSR and request a certificate
             csr_path = self.__generate_key_csr(harica_client, self.args.cn, self.args.alt_names, output_folder)
-            self.__issue_certificate(harica_client, csr_path, self.args.profile)
+            cn, certificate_id = self.__issue_certificate(harica_client, csr_path, self.args.profile)
         else:
             # CSR has been provided, just issue the certificate
-            self.__issue_certificate(harica_client, self.args.csr, self.args.profile)
+            cn, certificate_id = self.__issue_certificate(harica_client, self.args.csr, self.args.profile)
+
+        if self.args.wait:
+            self.__wait_for_certificate_approval(harica_client, cn, certificate_id)
 
     def __generate_key_csr(self, harica_client, cn, alt_names, output_folder):
         """
@@ -230,7 +239,80 @@ class RequestCommand(BaseCommand):
                 self.logger.info(
                     f"After administrator approval, you will be able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
                 )
+                return cn, cert_id
 
         except FileNotFoundError:
             self.logger.error(f"{Fore.RED}CSR file {csr_file} not found.{Style.RESET_ALL}")
             exit(1)
+
+    def __wait_for_certificate_approval(self, harica_client, cn, certificate_id):
+        """
+        Waits for the certificate to be approved by polling the Harica service.
+
+        This method keeps polling the Harica service until the certificate is approved, with increasing delays
+        between retries. If approval is not received after several attempts, it raises an exception.
+
+        Args:
+            harica_client (object): The Harica client to interact with the API.
+            cn (str): The common name of the certificate.
+            certificate_id (str): The ID of the certificate being requested.
+        """
+        retry_interval = 10  # Start with 10 seconds
+        max_retries = 10
+        retries = 0
+
+        while retries < max_retries:
+            try:
+                self.logger.info(f"{Fore.YELLOW}Checking certificate status for ID {certificate_id}...{Style.RESET_ALL}")
+                certificate = harica_client.get_certificate(certificate_id)
+
+                data_to_write = certificate.get("pemBundle")
+
+                # If no data is found for 'pemBundle', handle the PKCS7 format
+                if not data_to_write:
+                    # Get the PKCS7 encoded data and decode it
+                    p7b_data_string = certificate.get("pKCS7")
+                    p7b_base64 = (
+                        p7b_data_string.replace("-----BEGIN PKCS7-----", "").replace("-----END PKCS7-----", "").strip()
+                    )
+                    p7b_data = base64.b64decode(p7b_base64)
+
+                    # Load and extract the certificates from the PKCS7 data
+                    if p7b_data:
+                        pkcs7_cert = pkcs7.load_der_pkcs7_certificates(p7b_data)
+                        if pkcs7_cert:
+                            # Convert certificates to PEM format and join them into a single string
+                            data_to_write = "".join(
+                                cert.public_bytes(serialization.Encoding.PEM).decode("utf-8") for cert in pkcs7_cert
+                            )
+
+                if data_to_write:
+                    # Determine the output folder from the config
+                    output_folder = self.get_output_folder()
+
+                    # If the output folder and filename are provided, save the certificate to a file
+                    if output_folder:
+                        output_path = os.path.join(output_folder, f"{cn}_fullchain.pem")
+
+                        # Check if the file already exists, and handle the force flag for overwriting
+                        if os.path.exists(output_path) and not self.args.force:
+                            print(f"File {output_path} already exists. Use --force to overwrite.")
+                        else:
+                            # Write the certificate data to the file (binary or text based on data type)
+                            with open(output_path, "wb" if isinstance(data_to_write, bytes) else "w") as cert_file:
+                                cert_file.write(data_to_write)
+                            print(f"Certificate saved to {output_path}")
+                    else:
+                        self.logger("Error saving certificate")
+                return
+
+            except CertificateNotApprovedException:
+                self.logger.info(
+                    f"{Fore.RED}Certificate not yet approved. Retrying in {retry_interval} seconds...{Style.RESET_ALL}"
+                )
+                retries += 1
+                time.sleep(retry_interval)
+                retry_interval = min(retry_interval * 2, 300)  # Exponentially increase sleep time up to 5 minutes
+
+        self.logger.error(f"{Fore.RED}Certificate approval timed out after {max_retries} retries.{Style.RESET_ALL}")
+        exit(1)
