@@ -1,3 +1,9 @@
+## 0.15.2 (2025-02-26)
+
+### Fix
+
+- Add wait flag to request command
+
 ## 0.15.1 (2025-02-26)
 
 ### Fix
