@@ -94,30 +94,42 @@ To view all available commands and options:
 ```bash
 tcs-garr --help
 
-usage: tcs-garr [-h] [--debug] {list,request,init,download,approve,whoami,validate,domains,cancel} ...
+usage: tcs-garr [-h] [--debug] [--version] [--environment {production,stg}] {approve,cancel,domains,download,init,k8s,list,request,upgrade,validate,whoami} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {list,request,init,download,approve,whoami,validate,domains,cancel,k8s}
+  {approve,cancel,domains,download,init,k8s,list,request,upgrade,validate,whoami}
+                        Available commands
+    approve             Approve a certificate by ID
+    cancel              Cancel a request by ID
+    domains             List available domains
+    download            Download a certificate by ID
+    init                Generate Harica config file
+    k8s                 Generate Kubernetes TLS resource file
     list                Generate a report from Harica
     request             Request a new certificate
-    init                Generate Harica config file
-    download            Download a certificate by ID
-    approve             Approve a certificate by ID
-    whoami              Get logged in user profile
+    upgrade             Self-upgrade command for the app.
     validate            Create validation token for domains
-    domains             List available domains
-    cancel              Cancel a request by ID
-    k8s                 Generate Kubernetes tls resource file
+    whoami              Get logged in user profile
 
 options:
   -h, --help            show this help message and exit
   --debug               Enable DEBUG logging.
   --version             show program's version number and exit
+  --environment {production,stg}
+                        Specify the environment to use (default: production)
 ```
 
 ### Available Commands
+
+All commands are executed on the production environment of Harica at [https://cm.harica.gr](https://cm.harica.gr). By using the `--environment stg` flag, you can execute commands for the staging environment at [https://cm-stg.harica.gr](https://cm-stg.harica.gr).
+
+For example, if you want to use the staging environment, you can initialize the configuration file using the following command:
+
+```bash
+tcs-garr --environment stg init
+```
 
 1. **Initialize configuration**:
 
@@ -237,6 +249,12 @@ options:
 
    This command generates validation tokens for the specified domains. Replace `DOMAINS` with a comma-separated list of domains you need to validate.
 
+   To get the list of all available domains in your organization, use the `domains` command.
+
+   ```bash
+   tcs-garr domains
+   ```
+
 9. **Upgrade package**:
 
    ```bash
@@ -247,6 +265,23 @@ options:
    ```
 
    This command upgrades the package to the latest version.
+
+10. **K8s resource**:
+
+   This command is used to generate a Kubernetes secret YAML file for storing a TLS certificate and its associated private key. The resulting secret can be used in Kubernetes clusters to securely store TLS certificates for applications requiring encrypted communication.
+
+   The command requires the paths to both the certificate file (--cert) and the private key file (--key), as well as the target Kubernetes namespace (--namespace) where the secret will be created.
+
+   ```bash
+   usage: tcs-garr k8s [-h] --cert CERT --key KEY --namespace NAMESPACE
+
+   options:
+   -h, --help            show this help message and exit
+   --cert CERT           Path to the certificate file.
+   --key KEY             Path to the key file.
+   --namespace NAMESPACE
+                           Kubernetes namespace for the secret.
+   ```
 
 ## Docker
 
