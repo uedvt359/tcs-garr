@@ -1,3 +1,13 @@
+## 0.14.0 (2025-02-26)
+
+### Feat
+
+- Add multiple environment (production, stg)
+
+### Refactor
+
+- Move commands to classes
+
 ## 0.13.1 (2025-02-25)
 
 ### Fix
