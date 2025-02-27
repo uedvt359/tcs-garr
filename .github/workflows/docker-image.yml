@@ -36,12 +36,18 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Lower case docker image name
+        id: docker_image
+        uses: ASzc/change-string-case-action@v6
+        with:
+          string: ${{ github.repository }}
+
       - name: Build and push version
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ghcr.io/${{ github.repository }}:${{ env.IMAGE_TAG }}
+          tags: ghcr.io/${{ steps.docker_image.outputs.lowercase }}:${{ env.IMAGE_TAG }}
 
       - name: Build and push latest
         uses: docker/build-push-action@v6
