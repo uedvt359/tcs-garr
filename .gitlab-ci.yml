@@ -16,8 +16,8 @@ lint:
     - echo "Dependencies installed, building package..."
   script:
     - poetry run ruff format .
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+  only:
+    - main
 
 auto-bump-and-build:
   stage: auto-bump-and-build
@@ -32,10 +32,10 @@ auto-bump-and-build:
     - git remote rm origin && git remote add origin https://$CI_USERNAME:$PROJECT_ACCESS_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
     - git checkout -B "$CI_COMMIT_REF_NAME" "$CI_COMMIT_SHA"
     - poetry run cz bump --yes || true # execute auto bump, continue even if no bump is necessary
-    - git push --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
+    - git push -o ci.skip --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
     - poetry build
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main" && $GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+  only:
+    - main
   artifacts:
     paths:
       - dist/
@@ -48,8 +48,8 @@ publish_gitlab:
     - echo "Publishing package to Gitlab"
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
     - echo "Publishing to GitLab done!"
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "push"'
+  only:
+    - main
 
 do_nothing:
   stage: mr-wa
@@ -65,8 +65,8 @@ publish_pypi:
     - echo "Publishing package to PyPI"
     - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
     - echo "Publishing to PyPI done!"
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "push"'
+  only:
+    - main
 
 build_docker_image:
   stage: publish
@@ -110,17 +110,17 @@ build_docker_image:
         - Dockerfile
         - tcs_garr/*
         - pyproject.toml
-    - if: "$CI_COMMIT_TAG && $GITLAB_USER_LOGIN == $CI_USERNAME"
 
 release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_PIPELINE_SOURCE == "push"'
   script:
-    - echo "Running the release job for $CI_COMMIT_TAG."
+    - NEW_TAG=$(git describe --tags --abbrev=0)
+    - echo "Running the release job for $NEW_TAG."
     - "awk '/^## Unreleased/ { next } ; /^## / { r++ ; if ( r <2) { print ; next } else { exit } }; /^/ { print } ;' < CHANGELOG.md >INCREMENTAL_CHANGELOG.md"
   release:
-    tag_name: $CI_COMMIT_TAG
-    name: "Release $CI_COMMIT_TAG"
+    tag_name: $NEW_TAG
+    name: "Release $NEW_TAG"
     description: INCREMENTAL_CHANGELOG.md
+  only:
+    - main
