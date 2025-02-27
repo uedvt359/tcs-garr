@@ -119,7 +119,7 @@ release:
     - echo "Running the release job for $NEW_TAG."
     - "awk '/^## Unreleased/ { next } ; /^## / { r++ ; if ( r <2) { print ; next } else { exit } }; /^/ { print } ;' < CHANGELOG.md >INCREMENTAL_CHANGELOG.md"
   release:
-    tag_name: $NEW_TAG
+    tag_name: "v$NEW_TAG"
     name: "Release $NEW_TAG"
     description: INCREMENTAL_CHANGELOG.md
   only:
