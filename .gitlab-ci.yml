@@ -7,24 +7,25 @@ stages:
   - release
   - mr-wa
 
-before_script:
-  - pip install poetry
-  - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
-  - poetry install
-  - echo "Dependencies installed, building package..."
-
 lint:
   stage: lint
+  before_script:
+    - pip install poetry
+    - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
+    - poetry install
+    - echo "Dependencies installed, building package..."
   script:
     - poetry run ruff format .
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
 
 auto-bump-and-build:
   stage: auto-bump-and-build
-  except:
-    variables:
-      - $GITLAB_USER_LOGIN == "$CI_USERNAME"
+  before_script:
+    - pip install poetry
+    - poetry config virtualenvs.create false # Disable virtual environment creation and install dependencies in the system scope
+    - poetry install
+    - echo "Dependencies installed, building package..."
   script:
     - git config user.email $CI_EMAIL && git config user.name $CI_USERNAME
     - git config http.sslVerify false
@@ -33,8 +34,8 @@ auto-bump-and-build:
     - poetry run cz bump --yes || true # execute auto bump, continue even if no bump is necessary
     - git push --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
     - poetry build
-  only:
-    - main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main" && $GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
   artifacts:
     paths:
       - dist/
@@ -47,8 +48,8 @@ publish_gitlab:
     - echo "Publishing package to Gitlab"
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
     - echo "Publishing to GitLab done!"
-  only:
-    - main
+  rules:
+    - if: "$CI_COMMIT_TAG && $GITLAB_USER_LOGIN == $CI_USERNAME"
 
 do_nothing:
   stage: mr-wa
@@ -64,8 +65,8 @@ publish_pypi:
     - echo "Publishing package to PyPI"
     - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
     - echo "Publishing to PyPI done!"
-  only:
-    - main
+  rules:
+    - if: "$CI_COMMIT_TAG && $GITLAB_USER_LOGIN == $CI_USERNAME"
 
 build_docker_image:
   stage: publish
@@ -109,13 +110,13 @@ build_docker_image:
         - Dockerfile
         - tcs_garr/*
         - pyproject.toml
-    - if: $CI_COMMIT_TAG
+    - if: "$CI_COMMIT_TAG && $GITLAB_USER_LOGIN == $CI_USERNAME"
 
 release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    - if: "$CI_COMMIT_TAG"
+    - if: "$CI_COMMIT_TAG && $GITLAB_USER_LOGIN == $CI_USERNAME"
   script:
     - echo "Running the release job for $CI_COMMIT_TAG."
     - "awk '/^## Unreleased/ { next } ; /^## / { r++ ; if ( r <2) { print ; next } else { exit } }; /^/ { print } ;' < CHANGELOG.md >INCREMENTAL_CHANGELOG.md"
