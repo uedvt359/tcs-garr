@@ -5,10 +5,11 @@ import importlib
 import inspect
 import os
 import pkgutil
+from packaging import version
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.logger import setup_logger
-from tcs_garr.utils import get_current_version
+from tcs_garr.utils import check_pypi_version, get_current_version
 
 logger = setup_logger()
 
@@ -46,6 +47,11 @@ def main():
         action="version",
         version=get_current_version(),
     )
+    parser.add_argument(
+        "--no-check-release",
+        action="store_true",
+        help="Skip checking for a new release",
+    )
     subparser = parser.add_subparsers(dest="command", help="Available commands")
 
     parser.add_argument(
@@ -68,6 +74,18 @@ def main():
 
     # Now, pass the args to command discovery and update command instances
     command_instances = discover_commands(args)
+
+    # Check for new release unless --no-check-release is specified
+    if not args.no_check_release:
+        # Get the current version of the application
+        current_version = get_current_version()
+
+        # Check the latest version available on PyPI
+        latest_version = check_pypi_version()
+
+        # Compare the current version to the latest version
+        if version.parse(latest_version) > version.parse(current_version):
+            logger.info(f"New version available: {latest_version}. Please consider updating with command tcs-garr upgrade.")
 
     # Execute the selected command
     if args.command in command_instances:

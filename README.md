@@ -117,6 +117,7 @@ options:
   -h, --help            show this help message and exit
   --debug               Enable DEBUG logging.
   --version             show program's version number and exit
+  --no-check-release    Skip checking for a new release
   --environment {production,stg}
                         Specify the environment to use (default: production)
 ```
