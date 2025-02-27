@@ -1,11 +1,7 @@
 image: harbor.infra.garr.it/cache/library/python:3.12
 
-include:
-  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
-
 stages:
   - lint
-  - test
   - auto-bump-and-build
   - publish
   - release
@@ -39,8 +35,6 @@ auto-bump-and-build:
   artifacts:
     paths:
       - dist/
-    expire_in: 1 week
-  interruptible: true
 
 publish_gitlab:
   stage: publish
@@ -50,8 +44,8 @@ publish_gitlab:
     - echo "Publishing package to Gitlab"
     - TWINE_PASSWORD=${CI_JOB_TOKEN} TWINE_USERNAME=gitlab-ci-token python -m twine upload --repository-url ${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/pypi dist/*
     - echo "Publishing to GitLab done!"
-  rules:
-    - if: "$CI_COMMIT_TAG"
+  only:
+    - main
 
 do_nothing:
   stage: mr-wa
@@ -67,8 +61,8 @@ publish_pypi:
     - echo "Publishing package to PyPI"
     - TWINE_PASSWORD=${PYPI_TOKEN} TWINE_USERNAME=__token__ python -m twine upload dist/*
     - echo "Publishing to PyPI done!"
-  rules:
-    - if: "$CI_COMMIT_TAG"
+  only:
+    - main
 
 build_docker_image:
   stage: publish
@@ -83,15 +77,18 @@ build_docker_image:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
     - export TAG=$(grep '^version =' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
   script:
+    # Only build when merging request
     - echo "Building $CONTAINER_IMAGE_PATH/$IMAGE_NAME:latest"
     - docker build --tag $CONTAINER_IMAGE_PATH/$IMAGE_NAME:latest -f ./Dockerfile .
 
+    # Build and push latest tag on main branch
     - |
       if [[ "$CI_COMMIT_REF_NAME" == "main" ]]; then
         docker push $CONTAINER_IMAGE_PATH/$IMAGE_NAME:latest
         echo "Pushed $CONTAINER_IMAGE_PATH/$IMAGE_NAME:latest"
       fi
 
+    # Build and push on tag creation
     - |
       if [[ "$CI_COMMIT_TAG" != "" ]]; then
         docker build --tag $CONTAINER_IMAGE_PATH/$IMAGE_NAME:$TAG -f ./Dockerfile .
