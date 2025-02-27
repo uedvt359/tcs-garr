@@ -53,5 +53,5 @@ class WhoamiCommand(BaseCommand):
 
         # Log the user's full name and email in green-colored output
         self.logger.info(
-            f"{Fore.GREEN}👤 Logged in as {user['fullName']} ({user['email']}) on {self.args.environment} environment{Style.RESET_ALL}"
+            f"{Fore.GREEN}👤 Hi! You're logged in as {user['fullName']} ({user['email']}) on {self.args.environment} environment{Style.RESET_ALL}"
         )
