@@ -1,6 +1,6 @@
 [project]
 name = "tcs-garr"
-version = "0.16.5"
+version = "0.16.6"
 description = "Command-line tool to manage and interact with Harica platform"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
