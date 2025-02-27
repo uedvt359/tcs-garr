@@ -1,9 +1,14 @@
 image: harbor.infra.garr.it/cache/library/python:3.12
 
+include:
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+
 stages:
   - lint
-  - auto-bump
+  - test
+  - auto-bump-and-build
   - publish
+  - release
   - mr-wa
 
 before_script:
@@ -19,8 +24,8 @@ lint:
   only:
     - main
 
-auto-bump:
-  stage: auto-bump
+auto-bump-and-build:
+  stage: auto-bump-and-build
   script:
     - git config user.email $CI_EMAIL && git config user.name $CI_USERNAME
     - git config http.sslVerify false
@@ -34,6 +39,8 @@ auto-bump:
   artifacts:
     paths:
       - dist/
+    expire_in: 1 week
+  interruptible: true
 
 publish_gitlab:
   stage: publish
@@ -106,3 +113,16 @@ build_docker_image:
         - tcs_garr/*
         - pyproject.toml
     - if: $CI_COMMIT_TAG
+
+release:
+  stage: release
+  image: registry.gitlab.com/gitlab-org/release-cli:latest
+  rules:
+    - if: $CI_COMMIT_TAG
+  script:
+    - echo "Running the release job for $CI_COMMIT_TAG."
+    - "awk '/^## Unreleased/ { next } ; /^## / { r++ ; if ( r <2) { print ; next } else { exit } }; /^/ { print } ;' < CHANGELOG.md >INCREMENTAL_CHANGELOG.md"
+  release:
+    tag_name: $CI_COMMIT_TAG
+    name: "Release $CI_COMMIT_TAG"
+    description: INCREMENTAL_CHANGELOG.md
