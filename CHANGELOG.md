@@ -1,3 +1,9 @@
+## 0.16.2 (2025-02-27)
+
+### Fix
+
+- Increase verbosity of whoami command
+
 ## 0.16.1 (2025-02-27)
 
 ### Fix
