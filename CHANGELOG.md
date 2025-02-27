@@ -1,3 +1,9 @@
+## 0.16.1 (2025-02-27)
+
+### Fix
+
+- Add check for new release on execution
+
 ## 0.16.0 (2025-02-27)
 
 ### Feat
