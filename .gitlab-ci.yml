@@ -26,7 +26,6 @@ auto-bump:
     - poetry install
     - echo "Dependencies installed, building package..."
   script:
-    - echo "Commit Author $CI_COMMIT_AUTHOR - Gitlab User Login is $GITLAB_USER_LOGIN - Gitlab CI Username is $CI_USERNAME"
     - git config user.email $CI_EMAIL && git config user.name $CI_USERNAME
     - git config http.sslVerify false
     - git remote rm origin && git remote add origin https://$CI_USERNAME:$PROJECT_ACCESS_TOKEN@$CI_SERVER_HOST/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME.git
@@ -35,7 +34,7 @@ auto-bump:
     - poetry run cz bump --yes || true # execute auto bump, continue even if no bump is necessary
     - git push --tags origin $CI_COMMIT_BRANCH:$CI_COMMIT_BRANCH
   rules:
-    - if: '$GITLAB_USER_LOGIN != $CI_USERNAME && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
+    - if: '$CI_COMMIT_AUTHOR !~ /^$CI_USERNAME/ && ($CI_PIPELINE_SOURCE == "push" || $CI_PIPELINE_SOURCE == "merge_request_event")'
 
 build:
   stage: build
