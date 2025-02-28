@@ -1,6 +1,6 @@
-ARG PYTHON_VERSION=3.13-slim-bookworm
+ARG PYTHON_VERSION=3.13
 # ---------------------------------- Builder --------------------------------- #
-FROM python:${PYTHON_VERSION} AS builder
+FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
 
 ENV PYTHONUNBUFFERED=1
 ENV POETRY_NO_INTERACTION=1
@@ -22,7 +22,7 @@ poetry build
 EOF
 # ---------------------------------------------------------------------------- #
 
-FROM python:${PYTHON_VERSION} AS tcs-garr
+FROM python:${PYTHON_VERSION}-slim-bookworm AS tcs-garr
 
 ENV PYTHONUNBUFFERED=1
 ENV TZ=Europe/Rome
@@ -30,7 +30,7 @@ ENV TZ=Europe/Rome
 # Add tcs user
 RUN <<EOF
 groupadd --gid 1000 tcs
-useradd --uid 1000 --gid tcs --shell /bin/bash --system tcs
+useradd --uid 1000 --gid tcs --shell /bin/bash --system tcs -m
 EOF
 
 WORKDIR /app
