@@ -118,6 +118,10 @@ def load_config(environment="production"):
 
     bc_move_previous_config()
 
+    # For backward compatibility set write permission
+    if os.path.exists(settings.CONFIG_PATH) and not os.access(settings.CONFIG_PATH, os.W_OK):
+        os.chmod(settings.CONFIG_PATH, 0o600)
+
     # Determine the section name based on the environment
     section_name = f"harica-{environment}" if environment != "production" else "harica"
 
