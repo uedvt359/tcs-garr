@@ -162,7 +162,10 @@ class RequestCommand(BaseCommand):
         os.chmod(key_path, 0o600)
 
         # Prepare Subject Alternative Names
-        subject_alt_names = {cn, *filter(None, alt_names.split(","))}
+        subject_alt_names = [cn]
+        for item in alt_names.split(","):
+            if item and item not in subject_alt_names:
+                subject_alt_names.append(item)
 
         # Generate a CSR
         csr = (
