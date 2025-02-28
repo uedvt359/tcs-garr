@@ -141,6 +141,7 @@ tcs-garr --environment stg init
    This command initializes the configuration file with your credentials (email, password, and TOTP seed).
 
 2. **Get user profile**:
+
    ```bash
    tcs-garr whoami
    ```
@@ -288,6 +289,13 @@ tcs-garr --environment stg init
    ```
 
 ## Docker
+
+Docker image is available at GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
+You can pull them via:
+
+```bash
+docker pull ghcr.io/consortiumgarr/tcs-garr:<your_desired_version>
+```
 
 ### Build
 
