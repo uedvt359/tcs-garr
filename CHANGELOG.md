@@ -1,3 +1,9 @@
+## 0.16.18 (2025-02-28)
+
+### Fix
+
+- backward compatibility config file permissions
+
 ## 0.16.17 (2025-02-28)
 
 ### Fix
