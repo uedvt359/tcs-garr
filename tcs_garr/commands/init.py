@@ -111,7 +111,7 @@ class InitCommand(BaseCommand):
             config.write(configfile)
 
         # Set appropriate permissions for the configuration file
-        os.chmod(settings.CONFIG_PATH, 0o600)
+        os.chmod(settings.CONFIG_PATH, settings.CONFIG_FILE_PERMISSIONS)
 
         # Log success message
         self.logger.info(f"✨ Configuration for '{environment}' environment updated at {settings.CONFIG_PATH}")
