@@ -1,3 +1,15 @@
+## 0.16.18 (2025-02-28)
+
+### Fix
+
+- backward compatibility config file permissions
+
+## 0.16.17 (2025-02-28)
+
+### Fix
+
+- specify only python version. create user home dir.
+
 ## 0.16.16 (2025-02-28)
 
 ### Fix
