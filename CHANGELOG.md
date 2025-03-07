@@ -1,3 +1,9 @@
+## 0.16.22 (2025-03-07)
+
+### Fix
+
+- Autocomple chain if trust intermediate not present
+
 ## 0.16.22-rc.0 (2025-02-28)
 
 ### Fix
