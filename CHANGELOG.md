@@ -1,3 +1,9 @@
+## 0.16.23 (2025-03-07)
+
+### Fix
+
+- Add chain folder as resource
+
 ## 0.16.22 (2025-03-07)
 
 ### Fix
