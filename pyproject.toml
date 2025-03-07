@@ -17,6 +17,9 @@ Changelog = "https://github.com/ConsortiumGARR/tcs-garr/blob/main/CHANGELOG.md"
 [project.scripts]
 tcs-garr = "tcs_garr.main:main"
 
+[tool.poetry]
+include = ["chain/**"]
+
 [tool.poetry.dependencies]
 python = "^3.9"
 cryptography = "43.0.1"

@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.serialization import pkcs7
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
 from tcs_garr.utils import load_config
+import importlib.resources as pkg_resources
 
 
 class DownloadCommand(BaseCommand):
@@ -74,8 +75,13 @@ class DownloadCommand(BaseCommand):
             list: A list of x509.Certificate objects representing trusted intermediates.
         """
         trusted_intermediates = []
-        certs_folder = os.path.join(os.getcwd(), "chain")  # Folder where the trusted intermediates are stored
 
+        # Use importlib.resources to access the package resource directory
+        certs_folder = pkg_resources.files("tcs_garr").joinpath("chain")
+
+        if not os.path.exists(certs_folder):
+            print(f"Certificate chain folder does not exist: {certs_folder}")
+            return trusted_intermediates
         # Loop through all files in the 'chain' folder
         for cert_file in os.listdir(certs_folder):
             cert_path = os.path.join(certs_folder, cert_file)
