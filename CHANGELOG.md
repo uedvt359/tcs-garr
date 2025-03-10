@@ -1,3 +1,9 @@
+## 0.16.24-rc.0 (2025-03-10)
+
+### Fix
+
+- k8s secret yaml formatting. add file name and secret name as optional
+
 ## 0.16.23 (2025-03-07)
 
 ### Fix
