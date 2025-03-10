@@ -39,6 +39,19 @@ class K8sCommand(BaseCommand):
         parser.add_argument("--key", required=True, help="Path to the key file.")
         # Argument for the Kubernetes namespace where the secret will be created
         parser.add_argument("--namespace", required=True, help="Kubernetes namespace for the secret.")
+        # Argument for the secret name optional. Default is the name of the key file
+        # without the extension and appended with "-tls"
+        parser.add_argument(
+            "--secret-name",
+            default=None,
+            help="Name for the secret (optional).",
+        )
+        # Argument for the yaml file name optional. Default is the name of the key file
+        parser.add_argument(
+            "--file-name",
+            default=None,
+            help="Name for the yaml file without the extension (optional).",
+        )
 
     def get_output_folder(self):
         """
@@ -48,7 +61,7 @@ class K8sCommand(BaseCommand):
             str: The output folder path from the configuration.
         """
         # Load environment-specific configuration to get the output folder
-        username, password, totp_seed, output_folder = load_config(self.args.environment)
+        _, _, _, output_folder = load_config(self.args.environment)
         return output_folder
 
     def execute(self):
@@ -57,8 +70,9 @@ class K8sCommand(BaseCommand):
 
         The file is created based on the provided certificate and key files, and the generated YAML is saved to the output folder.
         """
-        # Get the name for the secret from the key file name (without the extension)
-        name = os.path.splitext(os.path.basename(self.args.key))[0]
+        key_filename = os.path.splitext(os.path.basename(self.args.key))[0]
+        secret_name = f"{key_filename}-tls" if self.args.secret_name is None else self.args.secret_name
+        file_name = secret_name if self.args.file_name is None else self.args.file_name
 
         # Read and encode the certificate file in base64
         with open(self.args.cert, "r") as cert_file:
@@ -74,21 +88,21 @@ apiVersion: v1
 kind: Secret
 type: kubernetes.io/tls
 metadata:
-name: {name}-tls
-namespace: {self.args.namespace}
+    name: {secret_name}
+    namespace: {self.args.namespace}
 data:
-tls.crt: >-
-    {cert_b64}
-tls.key: >-
-    {key_b64}
+    tls.crt: >-
+        {cert_b64}
+    tls.key: >-
+        {key_b64}
 """
 
         # Define the output file path where the secret YAML will be saved
-        output_file = os.path.join(self.get_output_folder(), f"{name}.yml")
+        output_file = os.path.join(self.get_output_folder(), f"{file_name}.yml")
 
         # Write the generated YAML content to the output file
         with open(output_file, "w") as f:
             f.write(secret_yaml)
 
         # Log the completion of the secret YAML generation
-        self.logger.info(f"{Fore.GREEN}Kubernetes secret YAML generated at {output_file}.{Style.RESET_ALL}")
+        self.logger.info(f"{Fore.GREEN}Kubernetes secret YAML generated at {output_file}{Style.RESET_ALL}")
