@@ -282,7 +282,7 @@ tcs-garr --environment stg init
    The command requires the paths to both the certificate file (--cert) and the private key file (--key), as well as the target Kubernetes namespace (--namespace) where the secret will be created.
 
    ```bash
-   usage: tcs-garr k8s [-h] --cert CERT --key KEY --namespace NAMESPACE
+   usage: tcs-garr k8s [-h] --cert CERT --key KEY --namespace NAMESPACE [--secret-name SECRET_NAME] [--file-name FILE_NAME]
 
    options:
    -h, --help            show this help message and exit
@@ -290,6 +290,10 @@ tcs-garr --environment stg init
    --key KEY             Path to the key file.
    --namespace NAMESPACE
                            Kubernetes namespace for the secret.
+   --secret-name SECRET_NAME
+                           Name for the secret (optional).
+   --file-name FILE_NAME
+                           Name for the yaml file without the extension (optional).
    ```
 
 ## Docker
