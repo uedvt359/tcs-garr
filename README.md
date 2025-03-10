@@ -34,6 +34,8 @@ Before using the TCS-GARR client, please ensure the following:
 
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
+⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If the client fails to authenticate and returns an "Invalid OTP" error, please ensure that your device's date and time are correct and synchronized with a public NTP server.
+
 ## Installation
 
 You can install the TCS-GARR client in a virtual environment or via `pipx`.
@@ -131,6 +133,8 @@ For example, if you want to use the staging environment, you can initialize the 
 ```bash
 tcs-garr --environment stg init
 ```
+
+⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If the client fails to authenticate and returns an "Invalid OTP" error, please ensure that your device's date and time are correct and synchronized with a public NTP server.
 
 1. **Initialize configuration**:
 
