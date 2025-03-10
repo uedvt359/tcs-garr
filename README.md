@@ -29,7 +29,7 @@ Before using the TCS-GARR client, please ensure the following:
 2. **Administrator and Approver Permissions**: To use the API, your local account must have Administrator and Approver permissions. To obtain these:
 
    - **Enable 2FA (Two-Factor Authentication)** on your profile page.
-   - **Save the TOTP** seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
+   - ⚠️⚠️ **Save the TOTP** seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
    - After enabling 2FA, request an existing administrator to elevate your account to Administrator and Approver.
 
 Once these steps are completed, you are ready to use the TCS-GARR client.
