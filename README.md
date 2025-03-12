@@ -38,7 +38,7 @@ Once these steps are completed, you are ready to use the TCS-GARR client.
 
 ## Installation
 
-You can install the TCS-GARR client in a virtual environment or via `pipx`.
+You can install the TCS-GARR client in a virtual environment using `pip` or via `pipx`.
 
 ### Virtual Environment
 
@@ -324,7 +324,9 @@ docker build -t tcs-garr:latest .
 
 ### Run
 
-Use the image like this:
+For the following commands, you can either use the builded image or pull the image from
+GitHub container
+[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
 
 ```bash
 docker run --name tcs-garr tcs-garr:latest --version
