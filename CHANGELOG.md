@@ -1,3 +1,9 @@
+## 0.17.0-rc.0 (2025-03-12)
+
+### Feat
+
+- error message in case of error during login
+
 ## 0.16.24 (2025-03-10)
 
 ## 0.16.24-rc.1 (2025-03-10)
