@@ -1,6 +1,6 @@
 # TCS-GARR Client
 
-![Version](https://img.shields.io/badge/Version-0.16.24-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-0.17.0-rc.0-brightgreen.svg)
 
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
@@ -38,7 +38,7 @@ Once these steps are completed, you are ready to use the TCS-GARR client.
 
 ## Installation
 
-You can install the TCS-GARR client in a virtual environment or via `pipx`.
+You can install the TCS-GARR client in a virtual environment using `pip` or via `pipx`.
 
 ### Virtual Environment
 
@@ -324,7 +324,9 @@ docker build -t tcs-garr:latest .
 
 ### Run
 
-Use the image like this:
+For the following commands, you can either use the builded image or pull the image from
+GitHub container
+[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
 
 ```bash
 docker run --name tcs-garr tcs-garr:latest --version

@@ -59,7 +59,11 @@ class HaricaClient:
             if self.token_is_valid() and not force:
                 return
 
-            self.login()  # Perform login
+            try:
+                self.login()  # Perform login
+            except PermissionError:
+                logger.error("❌ Login failed. Check possible errors in provided credentials.")
+                exit(1)
 
     def token_is_valid(self):
         """
