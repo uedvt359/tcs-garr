@@ -25,6 +25,8 @@ class RequestCommand(BaseCommand):
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
 
+    HARICA_SAN_LIMIT = 100
+
     def __init__(self, args):
         """
         Initializes the RequestCommand class.
@@ -212,10 +214,10 @@ class RequestCommand(BaseCommand):
                 cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
                 alt_names = [x.value for x in csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value]
 
-                # Check if the number of SANs is 10 or more and print a warning
-                if len(alt_names) >= 10:
+                # Check if the number of SANs is HARICA_SAN_LIMIT or more and print a warning
+                if len(alt_names) >= self.HARICA_SAN_LIMIT:
                     self.logger.warning(
-                        f"{Fore.RED}Warning: Certificates with more than 10 SANs might be refused.{Style.RESET_ALL}"
+                        f"{Fore.RED}Warning: Certificates with more than {self.HARICA_SAN_LIMIT} SANs might be refused.{Style.RESET_ALL}"
                     )
 
                 domains = [cn]
