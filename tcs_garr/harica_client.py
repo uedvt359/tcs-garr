@@ -9,7 +9,7 @@ from bs4 import BeautifulSoup
 
 from .exceptions import NoHaricaAdminException, NoHaricaApproverException, CertificateNotApprovedException
 
-from .utils import generate_otp
+from .utils import generate_otp, CertificateStatus
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -188,21 +188,50 @@ class HaricaClient:
 
         return response_data
 
-    def list_certificates(self, status="Valid"):
+    def list_certificates(self, start_index: int = 0, status: CertificateStatus = CertificateStatus.VALID):
         """
-        Retrieves a list of valid certificates.
+        Retrieves a list of certificates based on status and an optional email filter.
 
-        Available statuses:
-            - "Valid"
-            - "Pending"
+        Args:
+            start_index (int): The starting index of the certificates to retrieve.
+            status (CertificateStatus): The status of the certificates to retrieve.
 
         Returns:
-            dict: List of certificates.
+            list[dict]: List of certificates.
         """
-        status_mapping = {"Valid": "GetSSLTransactions", "Pending": "GetSSLReviewableTransactions"}
 
-        json_payload = {"startIndex": 0, "status": status, "filterPostDTOs": []}
-        data = self.__make_post_request(f"/api/OrganizationValidatorSSL/{status_mapping[status]}", data=json_payload).json()
+        status_mapping = {
+            # On Harica GUI GetSSLTransactions are SSL Certificates
+            CertificateStatus.VALID: "GetSSLTransactions",
+            CertificateStatus.REVOKED: "GetSSLTransactions",
+            CertificateStatus.EXPIRED: "GetSSLTransactions",
+            # On Harica GUI GetSSLReviewableTransactions are SSL Requests
+            CertificateStatus.PENDING: "GetSSLReviewableTransactions",
+            CertificateStatus.READY: "GetSSLReviewableTransactions",
+            CertificateStatus.COMPLETED: "GetSSLReviewableTransactions",
+            CertificateStatus.CANCELLED: "GetSSLReviewableTransactions",
+        }
+
+        # Build the filters list only if an email is provided
+        # 19/03/2025 Filters are not working via API
+        # if a filter is specified API will ignore it and return all certificates
+        # This remains as example
+        # filters = [{
+        #     "filterType": "Email",
+        #     "filterTypeSelection": "Is",
+        #     "filterValue": email,
+        #     "isSeperator": False
+        # }] if email else []
+
+        json_payload = {"startIndex": start_index, "status": status.value, "filterPostDTOs": []}
+
+        endpoint = f"/api/OrganizationValidatorSSL/{status_mapping[status]}"
+        data = self.__make_post_request(endpoint, data=json_payload).json()
+
+        # Add status to each certificate
+        for cert in data:
+            cert["status"] = status.value
+
         return data
 
     def build_domains_list(self, domains):
