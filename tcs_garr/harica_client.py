@@ -173,12 +173,14 @@ class HaricaClient:
         Returns:
             dict: The certificate details.
         """
-        pending_certs = self.list_certificates(status="Pending")
+        pending_status = CertificateStatus.PENDING
+
+        pending_certs = self.list_certificates(status=pending_status)
         logger.debug(json.dumps(pending_certs))
 
         for pc in pending_certs:
             # Check also pc.get("transactionStatus"). Better safe than sorry.
-            if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == "Pending":
+            if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
         # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
@@ -351,11 +353,16 @@ class HaricaClient:
             List: A list of pending transactions.
         """
         # Prepare the payload to retrieve SSL reviewable transactions
-        json_payload = {"startIndex": 0, "status": "Pending", "filterPostDTOs": []}
+        json_payload = {
+            "startIndex": 0,
+            "status": CertificateStatus.PENDING.value,
+            "filterPostDTOs": [],
+        }
 
         # Make a POST request to fetch the pending SSL transactions
         transactions = self.__make_post_request(
-            "/api/OrganizationValidatorSSL/GetSSLReviewableTransactions", data=json_payload
+            "/api/OrganizationValidatorSSL/GetSSLReviewableTransactions",
+            data=json_payload,
         ).json()
 
         return transactions
