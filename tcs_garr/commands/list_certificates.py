@@ -1,3 +1,5 @@
+import json
+import os
 import re
 from datetime import datetime, timedelta
 
@@ -76,16 +78,12 @@ class ListCertificatesCommand(BaseCommand):
             help="Filter certificates owner by user. Without arg (--user only) will filter for the logged in user.",
         )
 
-    def get_username(self):
-        """
-        Retrieve the default username from the configuration.
-
-        Returns:
-            str: The username from the configuration.
-        """
-        # Load environment-specific configuration
-        username, _, _, _ = load_config(self.args.environment)
-        return username
+        # Add export flag
+        parser.add_argument(
+            "--export",
+            action="store_true",
+            help="Export certificates to json file.",
+        )
 
     def get_cn_value(self, item):
         """
@@ -145,6 +143,9 @@ class ListCertificatesCommand(BaseCommand):
             args: Parsed command-line arguments that include optional filters for
                   certificate expiration dates.
         """
+        # Load configs
+        conf_user, _, _, output_folder = load_config(self.args.environment)
+
         # Get the current UTC date and time
         current_date = pytz.utc.localize(datetime.now())
 
@@ -157,7 +158,7 @@ class ListCertificatesCommand(BaseCommand):
 
         # Get username if specified in args
         # True when --user without arg
-        username = self.get_username() if self.args.user is True else self.args.user
+        username = conf_user if self.args.user is True else self.args.user
 
         # Set default status to valid
         if not self.args.status:
@@ -174,9 +175,13 @@ class ListCertificatesCommand(BaseCommand):
         # Retrieve the list of certificates from the Harica client
         # Handle pagination and statues
         certificates = []
+        recap = {
+            "count": 0,
+        }
 
         for status in statuses:
             start_index = 0
+            recap[status.name] = 0
             while True:
                 response = harica_client.list_certificates(
                     start_index=start_index,
@@ -188,6 +193,8 @@ class ListCertificatesCommand(BaseCommand):
 
                 certificates.extend(response)
                 start_index += len(response)
+                recap["count"] += len(response)
+                recap[status.name] += len(response)
 
         if username:
             # Filter certificates by username and the item field is userEmail
@@ -201,6 +208,10 @@ class ListCertificatesCommand(BaseCommand):
 
         # Sort certificates by the 'certificateValidTo' field
         certificates.sort(key=lambda x: x["certificateValidTo"], reverse=True)
+
+        if self.args.export:
+            with open(os.path.join(output_folder, "certificates.json"), "w") as f:
+                json.dump(certificates, f, indent=4)
 
         # Initialize a list to store certificate data for tabular display
         data = []
@@ -245,3 +256,9 @@ class ListCertificatesCommand(BaseCommand):
                 maxcolwidths=[None, 32, None, None, None, 20] if data else None,
             )
         )
+
+        # Write a recap of certificate count by status
+        self.logger.info(f"Total certificates: {recap['count']}")
+        for status in CertificateStatus:
+            if status.name in recap:
+                self.logger.info(f"Certificates with status {status.name}: {recap[status.name]}")
