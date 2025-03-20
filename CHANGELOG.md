@@ -3,12 +3,13 @@
 ### Feat
 
 - export to json. Brief recap to output
-
-## 0.18.0-rc.0 (2025-03-20)
-
-### Feat
-
 - list certificates by status. Fix CN, fix status, fix tabulate
+
+## 0.17.1 (2025-03-13)
+
+### Fix
+
+- Increase SAN to 100
 
 ## 0.17.0 (2025-03-12)
 
