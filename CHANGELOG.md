@@ -1,8 +1,31 @@
-## 0.18.0-rc.0 (2025-03-20)
+## 0.18.0-rc.4 (2025-03-20)
 
 ### Feat
 
 - revoke command
+
+## 0.18.0 (2025-03-21)
+
+## 0.18.0-rc.3 (2025-03-20)
+
+### Fix
+
+- use statuses
+
+## 0.18.0-rc.2 (2025-03-20)
+
+## 0.17.1 (2025-03-13)
+
+### Fix
+
+- Increase SAN to 100
+
+## 0.18.0-rc.1 (2025-03-20)
+
+### Feat
+
+- export to json. Brief recap to output
+- list certificates by status. Fix CN, fix status, fix tabulate
 
 ## 0.17.1 (2025-03-13)
 

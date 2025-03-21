@@ -4,16 +4,35 @@ import re
 import shutil
 import subprocess
 import sys
+from enum import Enum
 from importlib.metadata import version as get_installed_version
 
 import pyotp
 import requests
 
-from tcs_garr.logger import setup_logger
 import tcs_garr.settings as settings
-
+from tcs_garr.logger import setup_logger
 
 logger = setup_logger()
+
+
+class CertificateStatus(Enum):
+    # GetSSLTransactions statuses
+    VALID = "Valid"
+    REVOKED = "Revoked"
+    EXPIRED = "Expired"
+
+    # GetSSLReviewableTransactions statuses
+    PENDING = "Pending"
+    READY = "Ready"
+    COMPLETED = "Completed"
+    CANCELLED = "Cancelled"
+
+    # Custom status
+    ALL = "All"
+
+    def __str__(self):
+        return self.value
 
 
 def generate_otp(totp_seed):
