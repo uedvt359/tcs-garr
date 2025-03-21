@@ -448,6 +448,31 @@ class HaricaClient:
         # Check if the cancellation was successful
         return response.status_code == 200
 
+    def revoke_certificate(self, cert_id: str) -> bool:
+        """
+        Revokes a certificate based on the provided certificate ID.
+
+        Args:
+            cert_id (str): The certificate ID to revoke.
+
+        Returns:
+            bool: True if the revocation was successful, False otherwise.
+
+        """
+        payload = {
+            "transactionId": cert_id,
+            # Name seems to be always 4.9.1.1.1.1
+            "name": "4.9.1.1.1.1",
+            "notes": f"Revoked via harica-cli by {self.email}",
+            "message": "",
+        }
+        response = self.__make_post_request(
+            "/api/OrganizationValidatorSSL/RevokeCertificate",
+            data=payload,
+        )
+
+        return response.status_code == 200
+
     def list_domains(self):
         # Step 1: Search for the first available group in the organization
         groups = self.__make_post_request("/api/OrganizationAdmin/SearchGroups", data={"key": "", "value": ""}).json()

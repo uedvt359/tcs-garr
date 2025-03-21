@@ -1,6 +1,6 @@
 # TCS-GARR Client
 
-![Version](https://img.shields.io/badge/Version-0.18.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-0.19.0-rc.1-brightgreen.svg)
 
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
@@ -96,12 +96,12 @@ To view all available commands and options:
 ```bash
 tcs-garr --help
 
-usage: tcs-garr [-h] [--debug] [--version] [--environment {production,stg}] {approve,cancel,domains,download,init,k8s,list,request,upgrade,validate,whoami} ...
+usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}] {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {approve,cancel,domains,download,init,k8s,list,request,upgrade,validate,whoami}
+  {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
                         Available commands
     approve             Approve a certificate by ID
     cancel              Cancel a request by ID
@@ -111,6 +111,7 @@ positional arguments:
     k8s                 Generate Kubernetes TLS resource file
     list                Generate a report from Harica
     request             Request a new certificate
+    revoke              Revoke a certificate by ID
     upgrade             Self-upgrade command for the app.
     validate            Create validation token for domains
     whoami              Get logged in user profile
@@ -157,14 +158,18 @@ tcs-garr --environment stg init
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--export]
 
    options:
    -h, --help            show this help message and exit
    --expired-since EXPIRED_SINCE
-                           List certificates which expiry date is X days before now.
+                           List certificates whose expiry date is X days before now.
    --expiring-in EXPIRING_IN
-                           List certificates which expiry date is X days after now.
+                           List certificates whose expiry date is X days after now.
+   --status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}
+                           Filter certificates by status. Default is valid.
+   --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user.
+   --export              Export certificates to json file.
    ```
 
    This command will list all available certificates. You can filter them by date range using the `--expired-since` and `--expiring-in` options.
@@ -294,6 +299,16 @@ tcs-garr --environment stg init
                            Name for the secret (optional).
    --file-name FILE_NAME
                            Name for the yaml file without the extension (optional).
+   ```
+
+11. **Revoke certificate**:
+
+   ```bash
+   usage: tcs-garr revoke [-h] --id ID
+
+   options:
+   -h, --help  show this help message and exit
+   --id ID     ID of the certificate to revoke.
    ```
 
 ## Docker
