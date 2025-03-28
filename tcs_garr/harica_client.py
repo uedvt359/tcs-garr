@@ -7,9 +7,9 @@ import jwt
 import requests
 from bs4 import BeautifulSoup
 
-from .exceptions import NoHaricaAdminException, NoHaricaApproverException, CertificateNotApprovedException
+from .exceptions import CertificateNotApprovedException
 
-from .utils import generate_otp, CertificateStatus
+from .utils import generate_otp, CertificateStatus, UserRole
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -44,6 +44,7 @@ class HaricaClient:
         self.session = requests.Session()  # Reuse session for efficient requests
         self.token = None  # JWT token
         self.request_verification_token = None  # CSRF token
+        self.roles = set()
         self.prepare_client(force=False)  # Prepare client on initialization
 
     def prepare_client(self, force=False):
@@ -125,6 +126,19 @@ class HaricaClient:
         Logs in to CertManager and retrieves the necessary JWT token.
         If TOTP seed is provided, it uses 2FA during login.
         """
+
+        def parse_roles(raw_roles: str) -> set[UserRole]:
+            """Convert a comma-separated role string into a set of UserRole enums."""
+            roles = set()
+
+            for role in raw_roles.split(","):
+                role = role.strip()
+                # Validate if it's a valid enum value
+                if role in UserRole._value2member_map_:
+                    roles.add(UserRole(role))
+
+            return roles
+
         login_payload = {"email": self.email, "password": self.password}
 
         # If TOTP seed is provided, generate OTP and add it to the payload
@@ -132,6 +146,7 @@ class HaricaClient:
             login_payload.update({"token": generate_otp(self.totp_seed)})
             login_response = self.__make_post_request("/api/User/Login2FA", data=login_payload)
         else:
+            logger.debug("No TOTP seed provided. Using password-based login.")
             login_response = self.__make_post_request("/api/User/Login", data=login_payload)
 
         self.token = login_response.text
@@ -148,10 +163,7 @@ class HaricaClient:
         logger.debug("Login successful.")
 
         current_logged_in_user = self.get_logged_in_user_profile()
-        if "Enterprise Admin" not in current_logged_in_user["role"]:
-            raise NoHaricaAdminException
-        if "SSL Enterprise Approver" not in current_logged_in_user["role"]:
-            raise NoHaricaApproverException
+        self.roles = parse_roles(current_logged_in_user["role"])
 
     def get_logged_in_user_profile(self):
         """
@@ -629,3 +641,7 @@ class HaricaClient:
             Response: The response object from the POST request.
         """
         return self.__make_api_request(endpoint, method="POST", data=data, content_type=content_type)
+
+    def has_role(self, role: UserRole) -> bool:
+        """Check if the user has a specific role."""
+        return role in self.roles

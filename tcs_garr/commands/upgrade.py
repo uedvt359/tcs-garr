@@ -1,6 +1,7 @@
-from tcs_garr.utils import check_pypi_version, get_current_version, upgrade_package
-from tcs_garr.commands.base import BaseCommand
 from packaging import version
+
+from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import check_pypi_version, get_current_version, upgrade_package
 
 
 class UpgradeCommand(BaseCommand):

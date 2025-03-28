@@ -1,16 +1,18 @@
 import base64
+import os
+import time
+
 from colorama import Fore, Style
-from tcs_garr.commands.base import BaseCommand
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
-from cryptography.x509.oid import NameOID
-import os
-import time
-from tcs_garr.exceptions import CertificateNotApprovedException
-from tcs_garr.utils import load_config
 from cryptography.hazmat.primitives.serialization import pkcs7
+from cryptography.x509.oid import NameOID
+
+from tcs_garr.commands.base import BaseCommand
+from tcs_garr.exceptions import CertificateNotApprovedException
+from tcs_garr.utils import UserRole, load_config
 
 
 class RequestCommand(BaseCommand):
@@ -26,6 +28,7 @@ class RequestCommand(BaseCommand):
     """
 
     HARICA_SAN_LIMIT = 100
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         """

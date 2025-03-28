@@ -1,5 +1,7 @@
 from colorama import Fore, Style
+
 from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class WhoamiCommand(BaseCommand):
@@ -9,6 +11,8 @@ class WhoamiCommand(BaseCommand):
     This command interacts with the Harica API to retrieve the profile details
     of the user who is currently authenticated.
     """
+
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         """

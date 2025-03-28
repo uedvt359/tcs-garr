@@ -1,6 +1,8 @@
 from colorama import Fore, Style
-from tcs_garr.commands.base import BaseCommand
 from tabulate import tabulate
+
+from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class ApproveCommand(BaseCommand):
@@ -13,6 +15,8 @@ class ApproveCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.SSL_ENTERPRISE_APPROVER
 
     def __init__(self, args):
         """
