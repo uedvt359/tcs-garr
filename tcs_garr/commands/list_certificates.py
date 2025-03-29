@@ -157,7 +157,6 @@ class ListCertificatesCommand(BaseCommand):
 
         for status in statuses:
             start_index = 0
-            recap.setdefault(status.name, 0)
             while True:
                 response = client.list_certificates(
                     start_index=start_index,
@@ -169,12 +168,18 @@ class ListCertificatesCommand(BaseCommand):
 
                 certificates.extend(response)
                 start_index += len(response)
-                recap["count"] += len(response)
-                recap[status.name] += len(response)
 
         if username:
             # Filter certificates by username
             certificates = [cert for cert in certificates if cert["userEmail"] == username]
+
+        # Build recap
+        for cert in certificates:
+            status_name = cert["status"]
+            recap.setdefault(status_name, 0)
+            recap[status_name] += 1
+            recap["count"] += 1
+
         return certificates, recap
 
     def list_certificates_as_user(self, client, statuses):
@@ -282,11 +287,12 @@ class ListCertificatesCommand(BaseCommand):
                 transaction_id = item["transactionId"]
                 expiration_date = item["certificateValidTo"]
                 status = item["status"]
+                status_info = item["transactionStatusMessage"]
                 user = item["user"]
 
                 alt_names = ";\n".join(domain["fqdn"] for domain in item.get("domains", []))
 
-                data.append([transaction_id, cn_value, expiration_date, status, alt_names, user])
+                data.append([transaction_id, cn_value, expiration_date, status, status_info, alt_names, user])
 
         # Log the results in a formatted table with headers, using color for column titles
         self.logger.info(
@@ -297,16 +303,17 @@ class ListCertificatesCommand(BaseCommand):
                     "Common Name",
                     "Expire at",
                     "Status",
+                    "Info",
                     "Alt Names",
                     "Requested by" + Style.RESET_ALL,
                 ],
                 tablefmt="grid",
-                maxcolwidths=[None, 32, None, None, None, 20] if data else None,
+                maxcolwidths=[None, 32, None, None, 32, None, 20] if data else None,
             )
         )
 
         # Write a recap of certificate count by status
         self.logger.info(f"Total certificates: {recap['count']}")
         for status in CertificateStatus:
-            if status.name in recap:
-                self.logger.info(f"Certificates with status {status.name}: {recap[status.name]}")
+            if status.value in recap:
+                self.logger.info(f"Certificates with status {status.name}: {recap[status.value]}")
