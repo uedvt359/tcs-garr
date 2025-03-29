@@ -1,0 +1,27 @@
+---
+# export HARICA_USERNAME=username@domain.tld
+# export HARICA_PASSWORD=password
+# export HARICA_OUTPUT_FOLDER=$(pwd)/harica_certificates
+#
+# Export also TOTP SEED if 2FA is enabled
+#
+# export HARICA_TOTP_SEED="otpauth://totp/HARICA:username@domain.tld?secret=*****************&issuer=HARICA&digits=6"
+#
+# Run it with
+#
+# docker compose up -d --build --force-recreate
+
+services:
+  tcs-garr:
+    container_name: tcs-garr
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      HARICA_USERNAME: ${HARICA_USERNAME}
+      HARICA_PASSWORD: ${HARICA_PASSWORD}
+      HARICA_TOTP_SEED: ${HARICA_TOTP_SEED}
+      HARICA_OUTPUT_FOLDER: ${HARICA_OUTPUT_FOLDER}
+    volumes:
+      - ${HARICA_OUTPUT_FOLDER}:${HARICA_OUTPUT_FOLDER}
+    command: ["whoami"]

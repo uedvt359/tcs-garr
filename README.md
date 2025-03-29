@@ -31,24 +31,46 @@ Before using the TCS-GARR client, please ensure the following:
    Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM
    credentials, as they do not support API access.
 
-   - If you're already logged in with federated IDEM credentials, you can create a new
-     local account using an email alias. Federated users do not have a password and
+   - If you're already logged in with an academic login, you can create a new local
+     account using an email alias. Academic login users do not have a password and
      therefore cannot use the API.
 
-2. **Administrator and Approver Permissions**: To use the API, your local account must
-   have Administrator and Approver permissions. To obtain these:
+2. **Required Roles and 2FA**: To use specific API commands, your account must have the
+   appropriate roles and 2FA enabled where required.
 
-   - **Enable 2FA (Two-Factor Authentication)** on your profile page.
-   - ⚠️⚠️ **Save the TOTP** seed provided after enabling 2FA, as you will need it for
-     future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
-   - After enabling 2FA, request an existing administrator to elevate your account to
-     Administrator and Approver.
+   - **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
+     perform actions such as approving certificates or managing domain validation.
+
+   - If administrative permissions are required (e.g., domain validation), request an
+     existing administrator to elevate your account.
+
+> [!CAUTION]
+> ⚠️ **Save the TOTP seed** after enabling 2FA, as you will need it for authentication.
+> The TOTP seed follows the format `otpauth://totp/HARICA:username@domain.tld?secret=************&issuer=HARICA&digits=6`.
 
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
-⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
-the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
-your device's date and time are correct and synchronized with a public NTP server.
+> [!IMPORTANT]
+> ⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
+> the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
+> your device's date and time are correct and synchronized with a public NTP server.
+
+### Command Roles and 2FA Requirements
+
+| Command  |       Role Needed       | 2FA Needed |
+| -------- | ----------------------- | ---------- |
+| approve  | SSL_ENTERPRISE_APPROVER | ✔️         |
+| cancel   | USER                    | ❌         |
+| domains  | ENTERPRISE_ADMIN        | ✔️         |
+| download | USER                    | ❌         |
+| init     | None                    | ❌         |
+| k8s      | None                    | ❌         |
+| list     | USER                    | ❌         |
+| request  | USER                    | ❌         |
+| revoke   | USER                    | ❌         |
+| upgrade  | None                    | ❌         |
+| validate | ENTERPRISE_ADMIN        | ✔️         |
+| whoami   | USER                    | ❌         |
 
 ## Installation
 
@@ -146,7 +168,7 @@ options:
                         Specify the environment to use (default: production)
 ```
 
-### Available Commands
+### Production and staging environments
 
 All commands are executed on the production environment of Harica at
 [https://cm.harica.gr](https://cm.harica.gr). By using the `--environment stg` flag, you
@@ -160,9 +182,7 @@ configuration file using the following command:
 tcs-garr --environment stg init
 ```
 
-⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
-the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
-your device's date and time are correct and synchronized with a public NTP server.
+### Available Commands
 
 1. **Initialize configuration**:
 
@@ -186,7 +206,7 @@ your device's date and time are correct and synchronized with a public NTP serve
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--export]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--fqdn FQDN] [--export]
 
    options:
    -h, --help            show this help message and exit
@@ -196,7 +216,8 @@ your device's date and time are correct and synchronized with a public NTP serve
                            List certificates whose expiry date is X days after now.
    --status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}
                            Filter certificates by status. Default is valid.
-   --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user.
+   --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user. Use this if you have Approver role or Admin role.
+   --fqdn FQDN           Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).
    --export              Export certificates to json file.
    ```
 
@@ -406,6 +427,10 @@ docker run --name tcs-garr \
 ```
 
 The entrypoint is already set to `tcs-garr`, so just add arguments or options.
+
+### Docker compose
+
+Check the [docker-compose](docker-compose.yml) file for more details.
 
 ## License
 
