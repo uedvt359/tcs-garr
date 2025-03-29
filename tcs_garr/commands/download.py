@@ -185,6 +185,10 @@ class DownloadCommand(BaseCommand):
             else:
                 certificate = client.get_certificate(self.args.id)
 
+            if not certificate:
+                self.logger.error("Certificate not found.")
+                exit(1)
+
             # Get the data of the specified download type
             data_to_write = certificate.get(self.args.download_type)
 

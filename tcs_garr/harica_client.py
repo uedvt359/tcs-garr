@@ -198,11 +198,12 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        response_data = self.__make_post_request(
-            "/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id}
-        ).json()
+        res = self.__make_post_request("/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id})
 
-        return response_data
+        if res.status_code == 404:
+            return None
+
+        return res.json()
 
     def get_user_certificate(self, certificate_id):
         """
@@ -223,9 +224,12 @@ class HaricaClient:
             if uc.get("transactionId") == certificate_id and uc.get("status") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
+        res = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id})
 
-        return response_data
+        if res.status_code == 404:
+            return None
+
+        return res.json()
 
     def list_certificates(self, start_index: int = 0, status: CertificateStatus = CertificateStatus.VALID):
         """
@@ -285,7 +289,8 @@ class HaricaClient:
             if cert["transactionStatus"] == "Canceled":
                 cert["transactionStatus"] = "Cancelled"
 
-            # Revoked certificates have "Completed" as status. Overwrite with "Revoked"
+            # Revoked certificates have "Completed" as status and is not possible to
+            # retrieve only revoked user certs. Overwrite with "Revoked"
             if cert["isRevoked"]:
                 cert["transactionStatus"] = CertificateStatus.REVOKED.value
 
@@ -526,6 +531,30 @@ class HaricaClient:
         }
         response = self.__make_post_request(
             "/api/OrganizationValidatorSSL/RevokeCertificate",
+            data=payload,
+        )
+
+        return response.status_code == 200
+
+    def revoke_user_certificate(self, cert_id: str) -> bool:
+        """
+        Revokes a user certificate based on the provided certificate ID.
+
+        Args:
+            cert_id (str): The certificate ID to revoke.
+
+        Returns:
+            bool: True if the revocation was successful, False otherwise.
+
+        """
+        payload = {
+            "transactionId": cert_id,
+            # Name seems to be always 4.9.1.1.1.1
+            "name": "4.9.1.1.1.1",
+            "notes": f"Revoked via harica-cli by {self.email}",
+        }
+        response = self.__make_post_request(
+            "/api/Certificate/RevokeCertificate",
             data=payload,
         )
 
