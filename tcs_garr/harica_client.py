@@ -198,10 +198,32 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
         response_data = self.__make_post_request(
             "/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id}
         ).json()
+
+        return response_data
+
+    def get_user_certificate(self, certificate_id):
+        """
+        Retrieves a user certificate by its ID.
+
+        Args:
+            certificate_id (str): The certificate ID.
+
+        Returns:
+            dict: The certificate details.
+        """
+        pending_status = CertificateStatus.PENDING
+
+        user_certs = self.list_user_certificates()
+        logger.debug(json.dumps(user_certs))
+
+        for uc in user_certs:
+            if uc.get("transactionId") == certificate_id and uc.get("status") == pending_status.value:
+                raise CertificateNotApprovedException
+
+        response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
 
         return response_data
 
@@ -262,7 +284,7 @@ class HaricaClient:
             # Fix harica mispelling of "transactionStatus" for cancelled status
             if cert["transactionStatus"] == "Canceled":
                 cert["transactionStatus"] = "Cancelled"
-            cert["status"] = CertificateStatus(cert["transactionStatus"])
+            cert["status"] = cert["transactionStatus"]
             cert["user"] = self.full_name
 
         return data

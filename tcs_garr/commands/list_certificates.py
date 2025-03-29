@@ -184,18 +184,17 @@ class ListCertificatesCommand(BaseCommand):
         }
 
         certificates = client.list_user_certificates()
-        recap["count"] = len(certificates)
 
         filtered_certificates = []
         for cert in certificates:
             # Get the certificates with the specified status
-            if cert.get("status") in statuses:
+            if cert.get("status", "") in [status.value for status in statuses]:
                 filtered_certificates.append(cert)
 
-                status_name = cert["status"].name  # Extract status name
-                recap.setdefault(status_name, 0)  # Ensure key exists
-                recap[status_name] += 1  # Increment count
-                recap["count"] += 1  # Update total count
+                status_name = cert["status"]
+                recap.setdefault(status_name, 0)
+                recap[status_name] += 1
+                recap["count"] += 1
 
         return filtered_certificates, recap
 

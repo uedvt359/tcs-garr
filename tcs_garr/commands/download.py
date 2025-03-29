@@ -1,4 +1,5 @@
 import base64
+import importlib.resources as pkg_resources
 import os
 
 from cryptography import x509
@@ -9,8 +10,7 @@ from cryptography.hazmat.primitives.serialization import pkcs7
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
-from tcs_garr.utils import load_config
-import importlib.resources as pkg_resources
+from tcs_garr.utils import UserRole, load_config
 
 
 class DownloadCommand(BaseCommand):
@@ -20,6 +20,8 @@ class DownloadCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         super().__init__(args)
@@ -173,10 +175,15 @@ class DownloadCommand(BaseCommand):
         """
         Executes the command to download the certificate by ID, inspect and complete the chain, and save or print the certificate.
         """
-        harica_client = self.harica_client()
+        client = self.harica_client()
+
         try:
-            # Fetch the certificate using the provided ID
-            certificate = harica_client.get_certificate(self.args.id)
+            # if user role is only USER and does not have any other role
+            # do not use enterprise apis
+            if client.has_role(UserRole.USER) and len(client.roles) == 1:
+                certificate = client.get_user_certificate(self.args.id)
+            else:
+                certificate = client.get_certificate(self.args.id)
 
             # Get the data of the specified download type
             data_to_write = certificate.get(self.args.download_type)
