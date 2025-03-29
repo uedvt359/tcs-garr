@@ -1,3 +1,17 @@
+## 0.20.0-rc.0 (2025-03-29)
+
+### Feat
+
+- revoke user certificate. fix get certificates api.
+- download user certificate. fix list user certs
+- show roles in whoami
+- allow list certificate as simple user
+
+### Fix
+
+- list certs recap and add column status
+- add revoked status when listing user certs
+
 ## 0.19.0 (2025-03-21)
 
 ## 0.19.0-rc.1 (2025-03-21)
