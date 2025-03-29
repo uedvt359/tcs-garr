@@ -84,12 +84,55 @@ class ListCertificatesCommand(BaseCommand):
             ),
         )
 
+        # Add an optional argument to filter certificates by FQDN
+        parser.add_argument(
+            "--fqdn",
+            type=str,
+            help="Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).",
+        )
+
         # Add export flag
         parser.add_argument(
             "--export",
             action="store_true",
             help="Export certificates to json file.",
         )
+
+    def _filter_certificates(self, certificates, statuses, username=None):
+        """
+        Apply filters to the list of certificates based on status, username, and FQDN.
+
+        Args:
+            certificates (list): List of certificate dictionaries.
+            statuses (list): List of statuses to filter certificates by.
+            username (str, optional): Username to filter certificates by.
+
+        Returns:
+            list: Filtered list of certificates.
+            dict: Recap of filtered certificates.
+        """
+        # Filter by username
+        if username:
+            certificates = [cert for cert in certificates if cert["userEmail"] == username]
+
+        # Filter by status
+        certificates = [cert for cert in certificates if cert.get("status", "") in [status.value for status in statuses]]
+
+        # Filter by FQDN
+        fqdn_filter = self.args.fqdn
+        if fqdn_filter:
+            certificates = [
+                cert for cert in certificates if any(fqdn_filter in domain["fqdn"] for domain in cert.get("domains", []))
+            ]
+
+        # Build recap
+        recap = {"count": len(certificates)}
+        for cert in certificates:
+            status_name = cert["status"]
+            recap.setdefault(status_name, 0)
+            recap[status_name] += 1
+
+        return certificates, recap
 
     def get_cn_value(self, item):
         """
@@ -151,9 +194,6 @@ class ListCertificatesCommand(BaseCommand):
             dict: Recap
         """
         certificates = []
-        recap = {
-            "count": 0,
-        }
 
         for status in statuses:
             start_index = 0
@@ -169,39 +209,22 @@ class ListCertificatesCommand(BaseCommand):
                 certificates.extend(response)
                 start_index += len(response)
 
-        if username:
-            # Filter certificates by username
-            certificates = [cert for cert in certificates if cert["userEmail"] == username]
-
-        # Build recap
-        for cert in certificates:
-            status_name = cert["status"]
-            recap.setdefault(status_name, 0)
-            recap[status_name] += 1
-            recap["count"] += 1
-
-        return certificates, recap
+        return self._filter_certificates(certificates, statuses, username)
 
     def list_certificates_as_user(self, client, statuses):
-        certificates = []
-        recap = {
-            "count": 0,
-        }
+        """
+        List certificates as a regular user.
 
+        Args:
+            client (HaricaClient): A client instance.
+            statuses (list): List of certificate statuses to filter.
+
+        Returns:
+            list: List of certificates.
+            dict: Recap.
+        """
         certificates = client.list_user_certificates()
-
-        filtered_certificates = []
-        for cert in certificates:
-            # Get the certificates with the specified status
-            if cert.get("status", "") in [status.value for status in statuses]:
-                filtered_certificates.append(cert)
-
-                status_name = cert["status"]
-                recap.setdefault(status_name, 0)
-                recap[status_name] += 1
-                recap["count"] += 1
-
-        return filtered_certificates, recap
+        return self._filter_certificates(certificates, statuses)
 
     def execute(self):
         """
