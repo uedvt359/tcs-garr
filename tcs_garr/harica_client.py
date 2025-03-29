@@ -284,6 +284,11 @@ class HaricaClient:
             # Fix harica mispelling of "transactionStatus" for cancelled status
             if cert["transactionStatus"] == "Canceled":
                 cert["transactionStatus"] = "Cancelled"
+
+            # Revoked certificates have "Completed" as status. Overwrite with "Revoked"
+            if cert["isRevoked"]:
+                cert["transactionStatus"] = CertificateStatus.REVOKED.value
+
             cert["status"] = cert["transactionStatus"]
             cert["user"] = self.full_name
 
