@@ -1,3 +1,9 @@
+## 0.20.0-rc.1 (2025-03-29)
+
+### Feat
+
+- list certs and filter by fqdn.
+
 ## 0.20.0-rc.0 (2025-03-29)
 
 ### Feat
