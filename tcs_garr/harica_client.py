@@ -45,6 +45,7 @@ class HaricaClient:
         self.token = None  # JWT token
         self.request_verification_token = None  # CSRF token
         self.roles = set()
+
         self.prepare_client(force=False)  # Prepare client on initialization
 
     def prepare_client(self, force=False):
@@ -245,6 +246,22 @@ class HaricaClient:
         # Add status to each certificate
         for cert in data:
             cert["status"] = status.value
+
+        return data
+
+    def list_user_certificates(self):
+        """Retrieves a list of user certificates."""
+        endpoint = "/api/ServerCertificate/GetMyTransactions"
+        data = self.__make_post_request(endpoint).json()
+
+        # Add status to each certificate based on transactionStatus
+        # Set user because harica api will not return it
+        for cert in data:
+            # Fix harica mispelling of "transactionStatus" for cancelled status
+            if cert["transactionStatus"] == "Canceled":
+                cert["transactionStatus"] = "Cancelled"
+            cert["status"] = CertificateStatus(cert["transactionStatus"])
+            cert["user"] = self.full_name
 
         return data
 
