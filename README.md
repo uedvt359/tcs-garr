@@ -10,31 +10,45 @@
 
 ## Overview
 
-The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica platform. It offers features like listing, downloading, issuing certificates, approving requests, and generating domain validation tokens, all via the Harica API.
+The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica
+platform. It offers features like listing, downloading, issuing certificates, approving
+requests, and generating domain validation tokens, all via the Harica API.
 
 ## Warning ⚠️
 
-**Consortium GARR is not affiliated with HARICA, and the present work has not been endorsed by or agreed with HARICA.**
+**Consortium GARR is not affiliated with HARICA, and the present work has not been
+endorsed by or agreed with HARICA.**
 
-**Consortium GARR provides this code to the community for sharing purposes but does not commit to providing support, maintenance, or further development of the code. Use it at your own discretion.**
+**Consortium GARR provides this code to the community for sharing purposes but does not
+commit to providing support, maintenance, or further development of the code. Use it at
+your own discretion.**
 
 ### Prerequisites
 
 Before using the TCS-GARR client, please ensure the following:
 
-1. **Create a local account on the Harica platform**: You must create a local account on Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM credentials, as they do not support API access.
+1. **Create a local account on the Harica platform**: You must create a local account on
+   Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM
+   credentials, as they do not support API access.
 
-   - If you're already logged in with federated IDEM credentials, you can create a new local account using an email alias. Federated users do not have a password and therefore cannot use the API.
+   - If you're already logged in with federated IDEM credentials, you can create a new
+     local account using an email alias. Federated users do not have a password and
+     therefore cannot use the API.
 
-2. **Administrator and Approver Permissions**: To use the API, your local account must have Administrator and Approver permissions. To obtain these:
+2. **Administrator and Approver Permissions**: To use the API, your local account must
+   have Administrator and Approver permissions. To obtain these:
 
    - **Enable 2FA (Two-Factor Authentication)** on your profile page.
-   - ⚠️⚠️ **Save the TOTP** seed provided after enabling 2FA, as you will need it for future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
-   - After enabling 2FA, request an existing administrator to elevate your account to Administrator and Approver.
+   - ⚠️⚠️ **Save the TOTP** seed provided after enabling 2FA, as you will need it for
+     future authentication. TOTP seed is like `otpauth://totp/HARICA:...omissis...`
+   - After enabling 2FA, request an existing administrator to elevate your account to
+     Administrator and Approver.
 
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
-⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If the client fails to authenticate and returns an "Invalid OTP" error, please ensure that your device's date and time are correct and synchronized with a public NTP server.
+⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
+the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
+your device's date and time are correct and synchronized with a public NTP server.
 
 ## Installation
 
@@ -42,14 +56,16 @@ You can install the TCS-GARR client in a virtual environment using `pip` or via 
 
 ### Virtual Environment
 
-1. Open a terminal or command prompt and navigate to the directory where you want to install the package. Then, run the following command to create a virtual environment:
+1. Open a terminal or command prompt and navigate to the directory where you want to
+   install the package. Then, run the following command to create a virtual environment:
 
     ```bash
     mkdir <path>
     python -m venv venv
     ```
 
-    This will create a folder named `venv` in your project directory, containing a self-contained Python environment.
+    This will create a folder named `venv` in your project directory, containing a
+    self-contained Python environment.
 
 2. Activate the virtual environment based on your operating system:
 
@@ -73,19 +89,24 @@ You can install the TCS-GARR client in a virtual environment using `pip` or via 
 
 ## Configuration
 
-After installation, the first time you run the client, you will need to initialize the configuration file with your credentials by running:
+After installation, the first time you run the client, you will need to initialize the
+configuration file with your credentials by running:
 
 ```bash
 tcs-garr init
 ```
 
-This will create a `tcs-garr.conf` file in your home directory under `.config/tcs-garr` path. This file will contain your Harica username, password, TOTP seed, and folder for issued certificates and will have secure permissions.
+This will create a `tcs-garr.conf` file in your home directory under `.config/tcs-garr`
+path. This file will contain your Harica username, password, TOTP seed, and folder for
+issued certificates and will have secure permissions.
 
-If configuration file is not found, system will notify you to initialize the configuration using the `tcs-garr init` command.
+If configuration file is not found, system will notify you to initialize the
+configuration using the `tcs-garr init` command.
 
 ## Usage
 
-Once the setup is complete, you can use the TCS-GARR client for various operations. The command syntax follows this pattern:
+Once the setup is complete, you can use the TCS-GARR client for various operations. The
+command syntax follows this pattern:
 
 ```bash
 tcs-garr [command] [options]
@@ -127,15 +148,21 @@ options:
 
 ### Available Commands
 
-All commands are executed on the production environment of Harica at [https://cm.harica.gr](https://cm.harica.gr). By using the `--environment stg` flag, you can execute commands for the staging environment at [https://cm-stg.harica.gr](https://cm-stg.harica.gr).
+All commands are executed on the production environment of Harica at
+[https://cm.harica.gr](https://cm.harica.gr). By using the `--environment stg` flag, you
+can execute commands for the staging environment at
+[https://cm-stg.harica.gr](https://cm-stg.harica.gr).
 
-For example, if you want to use the staging environment, you can initialize the configuration file using the following command:
+For example, if you want to use the staging environment, you can initialize the
+configuration file using the following command:
 
 ```bash
 tcs-garr --environment stg init
 ```
 
-⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If the client fails to authenticate and returns an "Invalid OTP" error, please ensure that your device's date and time are correct and synchronized with a public NTP server.
+⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
+the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
+your device's date and time are correct and synchronized with a public NTP server.
 
 1. **Initialize configuration**:
 
@@ -143,7 +170,8 @@ tcs-garr --environment stg init
    tcs-garr init
    ```
 
-   This command initializes the configuration file with your credentials (email, password, and TOTP seed).
+   This command initializes the configuration file with your credentials (email,
+   password, and TOTP seed).
 
 2. **Get user profile**:
 
@@ -172,7 +200,8 @@ tcs-garr --environment stg init
    --export              Export certificates to json file.
    ```
 
-   This command will list all available certificates. You can filter them by date range using the `--expired-since` and `--expiring-in` options.
+   This command will list all available certificates. You can filter them by date range
+   using the `--expired-since` and `--expiring-in` options.
 
 4. **Download a certificate**:
 
@@ -191,7 +220,8 @@ tcs-garr --environment stg init
                             Type of download: 'pemBundle' or 'certificate'. Default is 'pemBundle'.
    ```
 
-   Replace `ID` with the ID of the certificate you wish to download. You can use `pemBundle` or `certificate` as arguments for specific download formats.
+   Replace `ID` with the ID of the certificate you wish to download. You can use
+   `pemBundle` or `certificate` as arguments for specific download formats.
 
 5. **Request a new certificate**:
 
@@ -212,14 +242,20 @@ tcs-garr --environment stg init
 
    The `request` command is used to submit a new certificate request to Harica.
 
-   You can either provide an existing Certificate Signing Request (`--csr`) or specify the details for generating a new CSR, including the Common Name (`--cn`) and any Subject Alternative Names (`--alt_names`).
-   If a new CSR is created using the `--cn` and `--alt_names` options, a private key will also be automatically generated.
+   You can either provide an existing Certificate Signing Request (`--csr`) or specify
+   the details for generating a new CSR, including the Common Name (`--cn`) and any
+   Subject Alternative Names (`--alt_names`). If a new CSR is created using the `--cn`
+   and `--alt_names` options, a private key will also be automatically generated.
 
-   You can choose between the `OV` (OV Profile) or `DV` (DV Profile) profile using the `--profile` option. Default is `OV`.
+   You can choose between the `OV` (OV Profile) or `DV` (DV Profile) profile using the
+   `--profile` option. Default is `OV`.
 
-   After submitting the certificate request, the request must be approved by another Administrator before the certificate can be downloaded. Ensure that an administrator is available to review and approve your request.
+   After submitting the certificate request, the request must be approved by another
+   Administrator before the certificate can be downloaded. Ensure that an administrator
+   is available to review and approve your request.
 
-   With `--wait`` flag, the command will wait for the certificate to be approved by another administrator. When approved, it will be automatically downloaded.
+   With `--wait`` flag, the command will wait for the certificate to be approved by
+   another administrator. When approved, it will be automatically downloaded.
 
 6. **Approve a certificate**:
 
@@ -233,9 +269,11 @@ tcs-garr --environment stg init
    --all           Approve all pending requests.
    ```
 
-   You can list all pending requests using the `--list-pending` option or approve all pending requests using the `--all` option.
+   You can list all pending requests using the `--list-pending` option or approve all
+   pending requests using the `--all` option.
 
-   You can also approve a specific certificate by providing its ID using the `--id` option.
+   You can also approve a specific certificate by providing its ID using the `--id`
+   option.
 
 7. **Cancel a certificate request**:
 
@@ -261,9 +299,11 @@ tcs-garr --environment stg init
    --domains DOMAINS  Comma separated list of domains.
    ```
 
-   This command generates validation tokens for the specified domains. Replace `DOMAINS` with a comma-separated list of domains you need to validate.
+   This command generates validation tokens for the specified domains. Replace `DOMAINS`
+   with a comma-separated list of domains you need to validate.
 
-   To get the list of all available domains in your organization, use the `domains` command.
+   To get the list of all available domains in your organization, use the `domains`
+   command.
 
    ```bash
    tcs-garr domains
@@ -282,9 +322,14 @@ tcs-garr --environment stg init
 
 10. **K8s resource**:
 
-   This command is used to generate a Kubernetes secret YAML file for storing a TLS certificate and its associated private key. The resulting secret can be used in Kubernetes clusters to securely store TLS certificates for applications requiring encrypted communication.
+   This command is used to generate a Kubernetes secret YAML file for storing a TLS
+   certificate and its associated private key. The resulting secret can be used in
+   Kubernetes clusters to securely store TLS certificates for applications requiring
+   encrypted communication.
 
-   The command requires the paths to both the certificate file (--cert) and the private key file (--key), as well as the target Kubernetes namespace (--namespace) where the secret will be created.
+   The command requires the paths to both the certificate file (--cert) and the private
+   key file (--key), as well as the target Kubernetes namespace (--namespace) where the
+   secret will be created.
 
    ```bash
    usage: tcs-garr k8s [-h] --cert CERT --key KEY --namespace NAMESPACE [--secret-name SECRET_NAME] [--file-name FILE_NAME]
@@ -313,8 +358,9 @@ tcs-garr --environment stg init
 
 ## Docker
 
-Docker image is available at GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
-You can pull them via:
+Docker image is available at GitHub container
+[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
+pull them via:
 
 ```bash
 docker pull ghcr.io/consortiumgarr/tcs-garr:<your_desired_version>
@@ -363,7 +409,8 @@ The entrypoint is already set to `tcs-garr`, so just add arguments or options.
 
 ## License
 
-This project is licensed under the GNU General Public License v3.0. See the [LICENSE](LICENSE.md) file for details.
+This project is licensed under the GNU General Public License v3.0. See the
+[LICENSE](LICENSE.md) file for details.
 
 ## Contributing and Further Development
 
