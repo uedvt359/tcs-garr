@@ -57,6 +57,10 @@ Once these steps are completed, you are ready to use the TCS-GARR client.
 
 ### Command Roles and 2FA Requirements
 
+**USER** is a logged-in user with no special permissions.
+
+Other roles, apart from **USER**, require 2FA and are provided by an administrator.
+
 | Command  |       Role Needed       | 2FA Needed |
 | -------- | ----------------------- | ---------- |
 | approve  | SSL_ENTERPRISE_APPROVER | ✔️         |
