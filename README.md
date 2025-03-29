@@ -36,7 +36,8 @@ Before using the TCS-GARR client, please ensure the following:
      therefore cannot use the API.
 
 2. **Required Roles and 2FA**: To use specific API commands, your account must have the
-   appropriate roles and 2FA enabled where required.
+   appropriate roles and 2FA enabled where required. Check the [Command Roles and 2FA
+   Requirements](#command-roles-and-2fa-requirements) section for details.
 
    - **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
      perform actions such as approving certificates or managing domain validation.
