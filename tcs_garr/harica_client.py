@@ -45,6 +45,7 @@ class HaricaClient:
         self.token = None  # JWT token
         self.request_verification_token = None  # CSRF token
         self.roles = set()
+        self.full_name = None
 
         self.prepare_client(force=False)  # Prepare client on initialization
 
@@ -165,6 +166,7 @@ class HaricaClient:
 
         current_logged_in_user = self.get_logged_in_user_profile()
         self.roles = parse_roles(current_logged_in_user["role"])
+        self.full_name = current_logged_in_user["fullName"]
 
     def get_logged_in_user_profile(self):
         """
@@ -662,3 +664,7 @@ class HaricaClient:
     def has_role(self, role: UserRole) -> bool:
         """Check if the user has a specific role."""
         return role in self.roles
+
+    def get_user_roles(self) -> str:
+        """Get a comma-separated string of user roles."""
+        return ", ".join(role.value for role in self.roles)
