@@ -1,4 +1,5 @@
 from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class CancelCommand(BaseCommand):
@@ -8,6 +9,8 @@ class CancelCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         """

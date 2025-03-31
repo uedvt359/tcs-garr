@@ -16,6 +16,16 @@ from tcs_garr.logger import setup_logger
 logger = setup_logger()
 
 
+class UserRole(Enum):
+    ENTERPRISE_ADMIN = "Enterprise Admin"
+    USER = "User"
+    SMIME_ENTERPRISE_APPROVER = "SMIME Enterprise Approver"
+    SSL_ENTERPRISE_APPROVER = "SSL Enterprise Approver"
+
+    def __str__(self):
+        return self.value
+
+
 class CertificateStatus(Enum):
     # GetSSLTransactions statuses
     VALID = "Valid"
@@ -63,7 +73,16 @@ def is_installed_via_pipx():
 
 def upgrade_via_pip():
     """Upgrade the package using pip."""
-    subprocess.run([sys.executable, "-m", "pip", "install", "--upgrade", settings.PACKAGE_NAME])
+    subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "pip",
+            "install",
+            "--upgrade",
+            settings.PACKAGE_NAME,
+        ]
+    )
 
 
 def upgrade_via_pipx():
@@ -85,9 +104,10 @@ def validate_config(config_data):
 
     :param config_data: Dictionary containing configuration values.
     """
-    missing_fields = [key for key, value in config_data.items() if not value]
+    mandatory_fields = ["username", "password", "output_folder"]
+    missing_fields = [key for key in mandatory_fields if not config_data.get(key)]
     if missing_fields:
-        logger.error(f"❌ Missing configuration values for: {', '.join(missing_fields)}")
+        logger.error(f"❌ Missing mandatory configuration values for: {', '.join(missing_fields)}")
         exit(1)
 
     # Validate email
@@ -97,12 +117,14 @@ def validate_config(config_data):
         logger.error(f"❌ Invalid email format for username: {config_data['username']}")
         exit(1)
 
-    # Validate TOTP seed
-    try:
-        generate_otp(config_data["totp_seed"])
-    except ValueError:
-        logger.error(f"❌ Invalid TOTP seed: {config_data['totp_seed']}")
-        exit(1)
+    # Validate TOTP seed if provided
+    totp_seed = config_data["totp_seed"]
+    if totp_seed:
+        try:
+            generate_otp(totp_seed)
+        except ValueError:
+            logger.error(f"❌ Invalid TOTP seed: {totp_seed}")
+            exit(1)
 
 
 def bc_move_previous_config():
@@ -138,8 +160,9 @@ def load_config(environment="production"):
     bc_move_previous_config()
 
     # For backward compatibility set write permission
-    if os.path.exists(settings.CONFIG_PATH) and not os.access(settings.CONFIG_PATH, os.W_OK):
-        os.chmod(settings.CONFIG_PATH, settings.CONFIG_FILE_PERMISSIONS)
+    config_path = settings.CONFIG_PATH
+    if os.path.exists(config_path) and not os.access(config_path, os.W_OK):
+        os.chmod(config_path, settings.CONFIG_FILE_PERMISSIONS)
 
     # Determine the section name based on the environment
     section_name = f"harica-{environment}" if environment != "production" else "harica"
@@ -155,7 +178,7 @@ def load_config(environment="production"):
                 config_data = {
                     "username": config.get(section_name, "username"),
                     "password": config.get(section_name, "password"),
-                    "totp_seed": config.get(section_name, "totp_seed"),
+                    "totp_seed": config.get(section_name, "totp_seed", fallback=None),
                     "output_folder": config.get(section_name, "output_folder"),
                 }
             else:
@@ -174,11 +197,11 @@ def load_config(environment="production"):
         }
 
         # Ensure all required environment variables are set
-        if not all([config_data["username"], config_data["password"], config_data["totp_seed"]]):
+        if not all([config_data["username"], config_data["password"]]):
             logger.error(
                 "Configuration file or environment variables missing. "
                 "Generate config file with 'tcs-garr init' command or set "
-                "HARICA_USERNAME, HARICA_PASSWORD and HARICA_TOTP_SEED "
+                "HARICA_USERNAME and HARICA_PASSWORD "
                 "environment variables."
             )
             exit(1)

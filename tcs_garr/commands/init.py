@@ -1,9 +1,11 @@
-from tcs_garr.commands.base import BaseCommand
-import os
 import configparser
-from colorama import Fore, Style
-import tcs_garr.settings as settings
 import getpass
+import os
+
+from colorama import Fore, Style
+
+import tcs_garr.settings as settings
+from tcs_garr.commands.base import BaseCommand
 
 
 class InitCommand(BaseCommand):

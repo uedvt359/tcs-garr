@@ -7,9 +7,9 @@ import jwt
 import requests
 from bs4 import BeautifulSoup
 
-from .exceptions import NoHaricaAdminException, NoHaricaApproverException, CertificateNotApprovedException
+from .exceptions import CertificateNotApprovedException
 
-from .utils import generate_otp, CertificateStatus
+from .utils import generate_otp, CertificateStatus, UserRole
 
 # Initialize logger
 logger = logging.getLogger(__name__)
@@ -44,6 +44,9 @@ class HaricaClient:
         self.session = requests.Session()  # Reuse session for efficient requests
         self.token = None  # JWT token
         self.request_verification_token = None  # CSRF token
+        self.roles = set()
+        self.full_name = None
+
         self.prepare_client(force=False)  # Prepare client on initialization
 
     def prepare_client(self, force=False):
@@ -125,6 +128,19 @@ class HaricaClient:
         Logs in to CertManager and retrieves the necessary JWT token.
         If TOTP seed is provided, it uses 2FA during login.
         """
+
+        def parse_roles(raw_roles: str) -> set[UserRole]:
+            """Convert a comma-separated role string into a set of UserRole enums."""
+            roles = set()
+
+            for role in raw_roles.split(","):
+                role = role.strip()
+                # Validate if it's a valid enum value
+                if role in UserRole._value2member_map_:
+                    roles.add(UserRole(role))
+
+            return roles
+
         login_payload = {"email": self.email, "password": self.password}
 
         # If TOTP seed is provided, generate OTP and add it to the payload
@@ -132,6 +148,7 @@ class HaricaClient:
             login_payload.update({"token": generate_otp(self.totp_seed)})
             login_response = self.__make_post_request("/api/User/Login2FA", data=login_payload)
         else:
+            logger.debug("No TOTP seed provided. Using password-based login.")
             login_response = self.__make_post_request("/api/User/Login", data=login_payload)
 
         self.token = login_response.text
@@ -148,10 +165,8 @@ class HaricaClient:
         logger.debug("Login successful.")
 
         current_logged_in_user = self.get_logged_in_user_profile()
-        if "Enterprise Admin" not in current_logged_in_user["role"]:
-            raise NoHaricaAdminException
-        if "SSL Enterprise Approver" not in current_logged_in_user["role"]:
-            raise NoHaricaApproverException
+        self.roles = parse_roles(current_logged_in_user["role"])
+        self.full_name = current_logged_in_user["fullName"]
 
     def get_logged_in_user_profile(self):
         """
@@ -183,12 +198,38 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        # response_data = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id}).json()
-        response_data = self.__make_post_request(
-            "/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id}
-        ).json()
+        res = self.__make_post_request("/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id})
 
-        return response_data
+        if res.status_code == 404:
+            return None
+
+        return res.json()
+
+    def get_user_certificate(self, certificate_id):
+        """
+        Retrieves a user certificate by its ID.
+
+        Args:
+            certificate_id (str): The certificate ID.
+
+        Returns:
+            dict: The certificate details.
+        """
+        pending_status = CertificateStatus.PENDING
+
+        user_certs = self.list_user_certificates()
+        logger.debug(json.dumps(user_certs))
+
+        for uc in user_certs:
+            if uc.get("transactionId") == certificate_id and uc.get("status") == pending_status.value:
+                raise CertificateNotApprovedException
+
+        res = self.__make_post_request("/api/Certificate/GetCertificate", data={"id": certificate_id})
+
+        if res.status_code == 404:
+            return None
+
+        return res.json()
 
     def list_certificates(self, start_index: int = 0, status: CertificateStatus = CertificateStatus.VALID):
         """
@@ -233,6 +274,28 @@ class HaricaClient:
         # Add status to each certificate
         for cert in data:
             cert["status"] = status.value
+
+        return data
+
+    def list_user_certificates(self):
+        """Retrieves a list of user certificates."""
+        endpoint = "/api/ServerCertificate/GetMyTransactions"
+        data = self.__make_post_request(endpoint).json()
+
+        # Add status to each certificate based on transactionStatus
+        # Set user because harica api will not return it
+        for cert in data:
+            # Fix harica mispelling of "transactionStatus" for cancelled status
+            if cert["transactionStatus"] == "Canceled":
+                cert["transactionStatus"] = "Cancelled"
+
+            # Revoked certificates have "Completed" as status and is not possible to
+            # retrieve only revoked user certs. Overwrite with "Revoked"
+            if cert["isRevoked"]:
+                cert["transactionStatus"] = CertificateStatus.REVOKED.value
+
+            cert["status"] = cert["transactionStatus"]
+            cert["user"] = self.full_name
 
         return data
 
@@ -473,6 +536,30 @@ class HaricaClient:
 
         return response.status_code == 200
 
+    def revoke_user_certificate(self, cert_id: str) -> bool:
+        """
+        Revokes a user certificate based on the provided certificate ID.
+
+        Args:
+            cert_id (str): The certificate ID to revoke.
+
+        Returns:
+            bool: True if the revocation was successful, False otherwise.
+
+        """
+        payload = {
+            "transactionId": cert_id,
+            # Name seems to be always 4.9.1.1.1.1
+            "name": "4.9.1.1.1.1",
+            "notes": f"Revoked via harica-cli by {self.email}",
+        }
+        response = self.__make_post_request(
+            "/api/Certificate/RevokeCertificate",
+            data=payload,
+        )
+
+        return response.status_code == 200
+
     def list_domains(self):
         # Step 1: Search for the first available group in the organization
         groups = self.__make_post_request("/api/OrganizationAdmin/SearchGroups", data={"key": "", "value": ""}).json()
@@ -629,3 +716,11 @@ class HaricaClient:
             Response: The response object from the POST request.
         """
         return self.__make_api_request(endpoint, method="POST", data=data, content_type=content_type)
+
+    def has_role(self, role: UserRole) -> bool:
+        """Check if the user has a specific role."""
+        return role in self.roles
+
+    def get_user_roles(self) -> str:
+        """Get a comma-separated string of user roles."""
+        return ", ".join(role.value for role in self.roles)

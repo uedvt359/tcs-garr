@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 from colorama import Fore, Style
 
 from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class RevokeCommand(BaseCommand):
@@ -12,6 +13,8 @@ class RevokeCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         """
@@ -38,17 +41,40 @@ class RevokeCommand(BaseCommand):
             help="ID of the certificate to revoke.",
         )
 
+    def is_certificate_valid_for_revocation(self, cert) -> bool:
+        """Checks if a certificate is eligible for revocation."""
+        if not cert:
+            self.logger.error("Certificate not found.")
+            return False
+
+        if cert.get("isRevoked"):
+            self.logger.error("Certificate is already revoked.")
+            return False
+
+        valid_from = datetime.fromisoformat(cert["validFrom"]).replace(tzinfo=timezone.utc)
+        valid_to = datetime.fromisoformat(cert["validTo"]).replace(tzinfo=timezone.utc)
+        now = datetime.now(timezone.utc)
+
+        if not (valid_from <= now <= valid_to):
+            self.logger.error("Certificate is not currently valid.")
+            return False
+
+        return True
+
     def execute(self):
         """
         Executes the command to revoke a certificate using the provided ID.
         """
-        harica_client = self.harica_client()
+        client = self.harica_client()
+        is_user_only = client.has_role(UserRole.USER) and len(client.roles) == 1
 
         id = self.args.id
-        cert = harica_client.get_certificate(id)
+        if is_user_only:
+            cert = client.get_user_certificate(id)
+        else:
+            cert = client.get_certificate(id)
 
-        if cert["isRevoked"]:
-            self.logger.error("Certificate is already revoked.")
+        if not self.is_certificate_valid_for_revocation(cert):
             exit(1)
 
         # Use sANS for confirmation
@@ -77,7 +103,15 @@ class RevokeCommand(BaseCommand):
             self.logger.error("Revoke operation cancelled.")
             exit(1)
 
-        if harica_client.revoke_certificate(id):
+        revoke_methods = {
+            True: client.revoke_user_certificate,
+            False: client.revoke_certificate,
+        }
+
+        # Pick the appropriate revoke function
+        revoke_func = revoke_methods[is_user_only]
+
+        if revoke_func(id):
             self.logger.info(f"Certificate with ID '{id}' has been revoked.")
         else:
             self.logger.error(f"Failed to revoke certificate with ID '{id}'.")

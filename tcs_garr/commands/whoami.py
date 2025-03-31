@@ -1,5 +1,7 @@
 from colorama import Fore, Style
+
 from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class WhoamiCommand(BaseCommand):
@@ -9,6 +11,8 @@ class WhoamiCommand(BaseCommand):
     This command interacts with the Harica API to retrieve the profile details
     of the user who is currently authenticated.
     """
+
+    REQUIRED_ROLE = UserRole.USER
 
     def __init__(self, args):
         """
@@ -46,12 +50,10 @@ class WhoamiCommand(BaseCommand):
             args: Parsed command-line arguments (not used for this command).
         """
         # Get an instance of the Harica client, using the provided arguments (if any)
-        harica_client = self.harica_client()
-
-        # Retrieve the current logged-in user's profile
-        user = harica_client.get_logged_in_user_profile()
+        client = self.harica_client()
 
         # Log the user's full name and email in green-colored output
         self.logger.info(
-            f"{Fore.GREEN}👤 Hi! You're logged in as {user['fullName']} ({user['email']}) on {self.args.environment} environment{Style.RESET_ALL}"
+            f"{Fore.GREEN}👤 Hi! You're logged in as {client.full_name} ({client.email}) on {self.args.environment} environment{Style.RESET_ALL}"
         )
+        self.logger.info(f"{Fore.GREEN}🔒 You have the following roles: {client.get_user_roles()}{Style.RESET_ALL}")

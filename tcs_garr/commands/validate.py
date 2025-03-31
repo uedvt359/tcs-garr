@@ -1,5 +1,7 @@
-from tcs_garr.commands.base import BaseCommand
 from colorama import Fore, Style
+
+from tcs_garr.commands.base import BaseCommand
+from tcs_garr.utils import UserRole
 
 
 class ValidateCommand(BaseCommand):
@@ -12,6 +14,8 @@ class ValidateCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.ENTERPRISE_ADMIN
 
     def __init__(self, args):
         """

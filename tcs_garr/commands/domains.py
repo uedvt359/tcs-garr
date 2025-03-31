@@ -1,6 +1,10 @@
-from colorama import Fore, Style
-from tcs_garr.commands.base import BaseCommand
 from datetime import datetime
+
+from colorama import Fore, Style
+
+from tcs_garr.commands.base import BaseCommand
+
+from tcs_garr.utils import UserRole
 
 
 class DomainsCommand(BaseCommand):
@@ -14,6 +18,8 @@ class DomainsCommand(BaseCommand):
     Args:
         args (argparse.Namespace): The command-line arguments passed to the command.
     """
+
+    REQUIRED_ROLE = UserRole.ENTERPRISE_ADMIN
 
     def __init__(self, args):
         """
