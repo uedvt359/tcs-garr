@@ -9,6 +9,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
+from cryptography.x509.extensions import ExtensionNotFound
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
@@ -215,7 +216,10 @@ class RequestCommand(BaseCommand):
                 csr = x509.load_pem_x509_csr(f.read(), default_backend())
 
                 cn = csr.subject.get_attributes_for_oid(NameOID.COMMON_NAME)[0].value
-                alt_names = [x.value for x in csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value]
+                try:
+                    alt_names = [x.value for x in csr.extensions.get_extension_for_class(x509.SubjectAlternativeName).value]
+                except ExtensionNotFound:
+                    alt_names = []
 
                 # Check if the number of SANs is HARICA_SAN_LIMIT or more and print a warning
                 if len(alt_names) >= self.HARICA_SAN_LIMIT:
