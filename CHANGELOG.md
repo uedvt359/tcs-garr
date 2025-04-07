@@ -1,3 +1,9 @@
+## 0.20.1 (2025-04-07)
+
+### Fix
+
+- Handle missing SubjectAlternativeName (closes #1)
+
 ## 0.20.0 (2025-03-31)
 
 ## 0.19.0 (2025-03-21)
