@@ -320,6 +320,8 @@ class HaricaClient:
     def build_domains_list(self, domains):
         """
         Builds a list of domain information for the certificate request.
+        If a wildcard domain (*.domain.tld) exists alongside its base domain,
+        only the wildcard domain is processed since it already covers the base domain.
 
         Args:
             domains (list): List of domains.
@@ -329,12 +331,25 @@ class HaricaClient:
         """
         domains_info = []
         processed_domains = set()
+        wildcard_bases = set()
+
+        # First, identify all wildcard domains and their base parts
+        for dom in domains:
+            if "*" in dom:
+                # Extract the base part of the wildcard domain (e.g., "mydomain.tld" from "*.mydomain.tld")
+                wildcard_base = dom.replace("*.", "")
+                wildcard_bases.add(wildcard_base)
 
         for dom in domains:
-            # Check if this is a 'www.' domain and skip if its non-www version has been processed
+            # Check if this is a 'www.' domain and get the base domain
             base_domain = dom.replace("www.", "")
 
+            # Skip if this domain has already been processed
             if base_domain in processed_domains:
+                continue
+
+            # Skip regular domains that are covered by wildcards
+            if "*" not in dom and base_domain in wildcard_bases:
                 continue
 
             domain_info = {

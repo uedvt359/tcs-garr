@@ -243,7 +243,7 @@ class RequestCommand(BaseCommand):
                     f"Ask another administrator to approve the certificate, using command: \n\ttcs-garr approve --id {cert_id}"
                 )
                 self.logger.info(
-                    f"After administrator approval, you will be able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn}.pem --download-type certificate{Style.RESET_ALL}"
+                    f"After administrator approval, you will be able to download it using command: \n\tTo get fullchain: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn.replace('*', 'wildcard')}_fullchain.pem{Style.RESET_ALL}\n\tTo get only certificate: {Fore.BLUE}tcs-garr download --id {cert_id} --output-filename {cn.replace('*', 'wildcard')}.pem --download-type certificate{Style.RESET_ALL}"
                 )
                 return cn, cert_id
 
