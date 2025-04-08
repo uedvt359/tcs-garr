@@ -1,3 +1,9 @@
+## 0.21.1 (2025-04-08)
+
+### Fix
+
+- Fix handling of wildcard certificate
+
 ## 0.21.0 (2025-04-08)
 
 ## 0.21.0-rc.3 (2025-04-08)
