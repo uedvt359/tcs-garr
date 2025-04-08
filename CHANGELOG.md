@@ -1,3 +1,30 @@
+## 0.21.0-rc.3 (2025-04-08)
+
+### Fix
+
+- Documentation of Contributing fixed
+
+## 0.21.0-rc.2 (2025-04-07)
+
+### Fix
+
+- Migrate pre-commit config
+- revert pyproject
+
+## 0.21.0-rc.1 (2025-04-07)
+
+### Fix
+
+- Poetry lock
+- Fix python version
+- Bump version of some packages
+
+## 0.21.0-rc.0 (2025-04-07)
+
+### Feat
+
+- Add proxy (closes #2)
+
 ## 0.20.1 (2025-04-07)
 
 ### Fix
