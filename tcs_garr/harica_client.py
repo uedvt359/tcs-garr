@@ -216,7 +216,7 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        res = self.__make_post_request("/api/OrganizationAdmin/GetEnterpriseCertificate", data={"id": certificate_id})
+        res = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
 
         if res.status_code == 404:
             return None
