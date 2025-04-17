@@ -78,13 +78,11 @@ class HaricaClient:
                 return
 
             try:
-                self.login()  # Perform login
-            except PermissionError:
-                logger.error("❌ Login failed. Check possible errors in provided credentials.")
-                exit(1)
-            except requests.exceptions.ProxyError as e:
-                logger.error(f"❌ Proxy connection error: {e}")
-                exit(1)
+                self.login()
+            except requests.exceptions.ProxyError as ex:
+                logger.error(f"❌ Proxy connection error: {ex}")
+            except Exception as ex:
+                logger.error(f"❌ Login failed: {ex}")
 
     def token_is_valid(self):
         """
@@ -169,9 +167,18 @@ class HaricaClient:
             logger.debug("No TOTP seed provided. Using password-based login.")
             login_response = self.__make_post_request("/api/User/Login", data=login_payload)
 
+        login_response.raise_for_status()
+
         self.token = login_response.text
         if not self.token:
-            raise Exception("Failed to retrieve JWT token.")
+            if self.totp_seed:
+                raise Exception("Failed to retrieve JWT token.")
+            else:
+                raise Exception(
+                    "Failed to retrieve JWT token. You attempted to log in without "
+                    "2FA, but it may be enabled on your account. If it is, please "
+                    "provide the TOTP seed."
+                )
 
         # Update session headers with the JWT token for subsequent requests
         self.session.headers.update(
@@ -717,7 +724,7 @@ class HaricaClient:
                 raise ValueError("Unsupported method. Use 'GET' or 'POST'.")
 
             if response.status_code == 400 or response.status_code == 401:
-                raise PermissionError(f"Permission Denied: {response.status_code}")
+                raise PermissionError("Permission denied.")
             elif response.status_code != 200:
                 logging.error(f"API request failed with status code {response.status_code}: {response.text}")
 

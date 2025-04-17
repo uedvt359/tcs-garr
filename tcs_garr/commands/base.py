@@ -47,6 +47,11 @@ class BaseCommand(ABC):
                 https_proxy=self.harica_config.https_proxy,
                 environment=self.args.environment,
             )
+
+        if not self._harica_client.token:
+            self.logger.error("Terminating!")
+            exit(1)
+
         self.check_required_role(self._harica_client)
 
         return self._harica_client
