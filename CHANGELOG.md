@@ -1,3 +1,9 @@
+## 0.21.3-rc.0 (2025-04-17)
+
+### Fix
+
+- failed login messages. Stop if no token retrieved
+
 ## 0.21.2 (2025-04-10)
 
 ## 0.21.2-rc.0 (2025-04-10)
