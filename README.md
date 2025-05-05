@@ -225,10 +225,13 @@ tcs-garr --environment stg init
 
 3. **List all certificates**:
 
+   The `list` command allows you to generate detailed reports of SSL certificates from the Harica service. It supports various filtering options and output formats to help you manage your certificates effectively.
+
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--fqdn FQDN] [--export]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]]
+                     [--fqdn FQDN] [--full] [--export [EXPORT]] [--json [JSON]]
 
    options:
    -h, --help            show this help message and exit
@@ -240,11 +243,26 @@ tcs-garr --environment stg init
                            Filter certificates by status. Default is valid.
    --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user. Use this if you have Approver role or Admin role.
    --fqdn FQDN           Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).
-   --export              Export certificates to json file.
+   --full                Retrieve full certificate information.
+   --export [EXPORT]     Export certificates to json file. Without arg uses default file, with arg specifies output file.
+   --json [JSON]         Alias for --export. Export certificates to json file.
    ```
 
    This command will list all available certificates. You can filter them by date range
    using the `--expired-since` and `--expiring-in` options.
+
+
+   By default, the command displays certificate information in a tabular format, showing transaction ID, common name, expiration date, status, information, alternative names, and requestor. When using the `--export` or `--json` option without a filename, the information is displayed in JSON format on the terminal and saved to the default file. With a filename specified, the data is saved to that file without terminal output.
+
+   #### Important Note on `--full` Option
+
+   The extended information provided by `--full` includes certificate metadata such as issuer details, certificate content, key usage, and other technical parameters from the certification authority.
+
+   When using the `--full` flag, be aware of the following:
+
+   1. **Performance Impact**: This option significantly increases processing time as it requires an additional API request for each certificate in the result set. For large certificate lists, this operation can take several minutes to complete.
+
+   2. **Rate Limiting**: The Harica platform implements rate limiting on API requests. Using `--full` with a large number of certificates may trigger rate limiting responses, especially when running multiple commands in quick succession.
 
 4. **Download a certificate**:
 
