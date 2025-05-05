@@ -8,7 +8,7 @@ from colorama import Fore, Style
 from dateutil import parser
 from tabulate import tabulate
 
-from tcs_garr.commands.base import BaseCommand
+from tcs_garr.commands.base import BaseCommand, requires_roles
 from tcs_garr.utils import CertificateStatus, UserRole
 
 
@@ -22,7 +22,7 @@ class ListCertificatesCommand(BaseCommand):
     next few days.
     """
 
-    REQUIRED_ROLE = UserRole.USER
+    REQUIRED_ROLE = UserRole.USER  # Base requirement for the whole command
 
     def __init__(self, args):
         """
@@ -180,6 +180,7 @@ class ListCertificatesCommand(BaseCommand):
         # Return cn_value or "CN not found"
         return cn_value if cn_value else "CN not found"
 
+    @requires_roles(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER, logic="AND")
     def list_certificates_as_admin(self, username, statuses):
         """
         List certificates as admin user
