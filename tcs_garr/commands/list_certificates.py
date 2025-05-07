@@ -8,7 +8,7 @@ from colorama import Fore, Style
 from dateutil import parser
 from tabulate import tabulate
 
-from tcs_garr.commands.base import BaseCommand
+from tcs_garr.commands.base import BaseCommand, requires_roles
 from tcs_garr.utils import CertificateStatus, UserRole
 
 
@@ -22,7 +22,7 @@ class ListCertificatesCommand(BaseCommand):
     next few days.
     """
 
-    REQUIRED_ROLE = UserRole.USER
+    REQUIRED_ROLE = UserRole.USER  # Base requirement for the whole command
 
     def __init__(self, args):
         """
@@ -91,11 +91,29 @@ class ListCertificatesCommand(BaseCommand):
             help="Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).",
         )
 
+        # Add full info flag
+        parser.add_argument(
+            "--full",
+            action="store_true",
+            help="Retrieve full certificate information.",
+        )
+
         # Add export flag
         parser.add_argument(
             "--export",
-            action="store_true",
-            help="Export certificates to json file.",
+            nargs="?",
+            const=True,
+            default=None,
+            help="Export certificates to json file. Without arg uses default file, with arg specifies output file.",
+        )
+
+        # Add json flag as an alias for export
+        parser.add_argument(
+            "--json",
+            nargs="?",
+            const=True,
+            default=None,
+            help="Alias for --export. Export certificates to json file.",
         )
 
     def _filter_certificates(self, certificates, statuses, username=None):
@@ -180,7 +198,8 @@ class ListCertificatesCommand(BaseCommand):
         # Return cn_value or "CN not found"
         return cn_value if cn_value else "CN not found"
 
-    def list_certificates_as_admin(self, username, statuses):
+    @requires_roles(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER, logic="AND")
+    def list_certificates_as_admin(self, username, statuses, full_info=False):
         """
         List certificates as admin user
 
@@ -197,10 +216,7 @@ class ListCertificatesCommand(BaseCommand):
         for status in statuses:
             start_index = 0
             while True:
-                response = self.harica_client.list_certificates(
-                    start_index=start_index,
-                    status=status,
-                )
+                response = self.harica_client.list_certificates(start_index=start_index, status=status, full_info=full_info)
 
                 if not response:
                     break
@@ -210,7 +226,7 @@ class ListCertificatesCommand(BaseCommand):
 
         return self._filter_certificates(certificates, statuses, username)
 
-    def list_certificates_as_user(self, statuses):
+    def list_certificates_as_user(self, statuses, full_info=False):
         """
         List certificates as a regular user.
 
@@ -221,7 +237,7 @@ class ListCertificatesCommand(BaseCommand):
             list: List of certificates.
             dict: Recap.
         """
-        certificates = self.harica_client.list_user_certificates()
+        certificates = self.harica_client.list_user_certificates(full_info)
         return self._filter_certificates(certificates, statuses)
 
     def execute(self):
@@ -263,18 +279,21 @@ class ListCertificatesCommand(BaseCommand):
             else self.args.status
         )
 
+        # Determine if we need to handle JSON output (either --export or --json is provided)
+        export_setting = self.args.export if self.args.export is not None else self.args.json
+
+        # Use full_info flag directly from args
+        full_info = self.args.full
+
         # Retrieve the list of certificates from the Harica client
         # Handle pagination and statues if admin
 
         # if user role is only USER and does not have any other role
         # get only user certificates
         if self.harica_client.has_role(UserRole.USER) and len(self.harica_client.roles) == 1:
-            certificates, recap = self.list_certificates_as_user(statuses)
+            certificates, recap = self.list_certificates_as_user(statuses, full_info=full_info)
         else:
-            certificates, recap = self.list_certificates_as_admin(
-                username,
-                statuses,
-            )
+            certificates, recap = self.list_certificates_as_admin(username, statuses, full_info=full_info)
 
         # Replace None value with datemin and convert to string
         # This will facilitate sorting
@@ -285,9 +304,34 @@ class ListCertificatesCommand(BaseCommand):
         # Sort certificates by the 'certificateValidTo' field
         certificates.sort(key=lambda x: x["certificateValidTo"], reverse=True)
 
-        if self.args.export:
-            with open(os.path.join(output_folder, "certificates.json"), "w") as f:
-                json.dump(certificates, f, indent=4)
+        # Handle JSON output if --export or --json is provided
+        if export_setting is not None:
+            # Filter certificates based on date range if specified
+            filtered_certificates = []
+            for cert in certificates:
+                expire_date_naive = parser.isoparse(cert["certificateValidTo"])
+                expire_date = pytz.utc.localize(expire_date_naive)
+
+                if (from_date is None or expire_date <= from_date) and (to_date is None or expire_date < to_date):
+                    filtered_certificates.append(cert)
+
+            # Determine output file path
+            if export_setting is True:  # No arg provided, use default file
+                output_file = os.path.join(output_folder, "certificates.json")
+            else:  # Use the provided filename
+                output_file = export_setting
+
+            # Save to file
+            with open(output_file, "w") as f:
+                json.dump(filtered_certificates, f, indent=4)
+                self.logger.info(f"JSON data exported to {output_file}")
+
+            # Only output the JSON to terminal if no filename specified (just --export or --json without args)
+            if export_setting is True:
+                print(json.dumps(filtered_certificates, indent=4))
+
+            # Exit early as we don't need to show tabular output
+            return
 
         # Initialize a list to store certificate data for tabular display
         data = []

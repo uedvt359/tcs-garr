@@ -230,6 +230,11 @@ class HaricaClient:
 
         return res.json()
 
+    def get_certificate_info(self, certificate_id):
+        cert_info = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
+
+        return cert_info.json()
+
     def get_user_certificate(self, certificate_id):
         """
         Retrieves a user certificate by its ID.
@@ -256,7 +261,9 @@ class HaricaClient:
 
         return res.json()
 
-    def list_certificates(self, start_index: int = 0, status: CertificateStatus = CertificateStatus.VALID):
+    def list_certificates(
+        self, start_index: int = 0, status: CertificateStatus = CertificateStatus.VALID, full_info: bool = False
+    ):
         """
         Retrieves a list of certificates based on status and an optional email filter.
 
@@ -300,9 +307,14 @@ class HaricaClient:
         for cert in data:
             cert["status"] = status.value
 
+            if full_info:
+                cert_info = self.get_certificate_info(cert["transactionId"])
+
+                for key, value in cert_info.items():
+                    cert[key] = value
         return data
 
-    def list_user_certificates(self):
+    def list_user_certificates(self, full_info: bool = False):
         """Retrieves a list of user certificates."""
         endpoint = "/api/ServerCertificate/GetMyTransactions"
         data = self.__make_post_request(endpoint).json()
@@ -321,6 +333,12 @@ class HaricaClient:
 
             cert["status"] = cert["transactionStatus"]
             cert["user"] = self.full_name
+
+            if full_info:
+                cert_info = self.get_certificate_info(cert["transactionId"])
+
+                for key, value in cert_info.items():
+                    cert[key] = value
 
         return data
 

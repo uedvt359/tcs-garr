@@ -1,3 +1,13 @@
+## 0.22.0-rc.0 (2025-05-05)
+
+### Feat
+
+- Add full export in json
+
+### Fix
+
+- Issue #3 Check required roles for listing certificate as administrator
+
 ## 0.21.3 (2025-04-23)
 
 ## 0.21.3-rc.0 (2025-04-17)

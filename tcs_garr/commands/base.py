@@ -1,9 +1,114 @@
 from abc import ABC, abstractmethod
+from functools import wraps
+
 from colorama import Fore, Style
 
 from tcs_garr.harica_client import HaricaClient
 from tcs_garr.logger import setup_logger
 from tcs_garr.utils import HaricaClientConfig
+
+
+def requires_any_role(*roles):
+    """
+    Decorator to restrict function access based on user roles using OR logic.
+
+    Args:
+        *roles: One or more UserRole values. User must have AT LEAST ONE of these roles.
+
+    Example:
+        @requires_any_role(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER)
+        def admin_or_approver_function(self):
+            # Users with either ENTERPRISE_ADMIN or SSL_ENTERPRISE_APPROVER role can call this
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Ensure we have a client with valid authentication
+            client = self.harica_client
+
+            # Check if the user has at least one of the required roles (OR logic)
+            has_required_role = any(client.has_role(role) for role in roles)
+
+            if not has_required_role:
+                role_names = [role.value for role in roles]
+                self.logger.error(
+                    f"{Fore.RED}User {client.email} lacks required role(s): {' or '.join(role_names)}{Style.RESET_ALL}"
+                )
+                exit(1)
+
+            # User has the required role, proceed with the function call
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def requires_all_roles(*roles):
+    """
+    Decorator to restrict function access based on user roles using AND logic.
+
+    Args:
+        *roles: One or more UserRole values. User must have ALL of these roles.
+
+    Example:
+        @requires_all_roles(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER)
+        def admin_and_approver_function(self):
+            # Only users with BOTH ENTERPRISE_ADMIN and SSL_ENTERPRISE_APPROVER roles can call this
+    """
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(self, *args, **kwargs):
+            # Ensure we have a client with valid authentication
+            client = self.harica_client
+
+            # Check if the user has all of the required roles (AND logic)
+            has_all_required_roles = all(client.has_role(role) for role in roles)
+
+            if not has_all_required_roles:
+                role_names = [role.value for role in roles]
+                self.logger.error(
+                    f"{Fore.RED}User {client.email} lacks required role(s): {' and '.join(role_names)}{Style.RESET_ALL}"
+                )
+                exit(1)
+
+            # User has all required roles, proceed with the function call
+            return func(self, *args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+# For backward compatibility and cleaner API
+def requires_roles(*roles, logic="OR"):
+    """
+    Decorator to restrict function access based on user roles.
+
+    Args:
+        *roles: One or more UserRole values that are required to execute the function.
+        logic: "OR" (default) - user must have at least one of the roles
+               "AND" - user must have all of the roles
+
+    Example:
+        @requires_roles(UserRole.ENTERPRISE_ADMIN)
+        def admin_only_function(self):
+            # Only users with ENTERPRISE_ADMIN role can call this
+
+        @requires_roles(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER)
+        def admin_or_approver_function(self):
+            # Users with either ENTERPRISE_ADMIN or SSL_ENTERPRISE_APPROVER role can call this
+
+        @requires_roles(UserRole.ENTERPRISE_ADMIN, UserRole.SSL_ENTERPRISE_APPROVER, logic="AND")
+        def admin_and_approver_function(self):
+            # Only users with both ENTERPRISE_ADMIN and SSL_ENTERPRISE_APPROVER roles can call this
+    """
+    if logic.upper() == "AND":
+        return requires_all_roles(*roles)
+    else:  # Default to OR logic
+        return requires_any_role(*roles)
 
 
 class BaseCommand(ABC):
