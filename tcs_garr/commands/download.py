@@ -5,7 +5,7 @@ import os
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec, dsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 
 from tcs_garr.commands.base import BaseCommand
@@ -122,13 +122,31 @@ class DownloadCommand(BaseCommand):
 
             # Verify the certificate was signed by the next one in the chain
             try:
-                issuer_cert.public_key().verify(
-                    cert.signature,
-                    cert.tbs_certificate_bytes,
-                    # Add the correct padding for RSA signatures (PKCS1v15) and the hash algorithm
-                    padding.PKCS1v15(),
-                    cert.signature_hash_algorithm,
-                )
+                issuer_public_key = issuer_cert.public_key()
+
+                if isinstance(issuer_public_key, rsa.RSAPublicKey):
+                    issuer_public_key.verify(
+                        cert.signature,
+                        cert.tbs_certificate_bytes,
+                        padding.PKCS1v15(),
+                        cert.signature_hash_algorithm,
+                    )
+                elif isinstance(issuer_public_key, ec.EllipticCurvePublicKey):
+                    issuer_public_key.verify(
+                        cert.signature,
+                        cert.tbs_certificate_bytes,
+                        ec.ECDSA(cert.signature_hash_algorithm),
+                    )
+                elif isinstance(issuer_public_key, dsa.DSAPublicKey):
+                    issuer_public_key.verify(
+                        cert.signature,
+                        cert.tbs_certificate_bytes,
+                        cert.signature_hash_algorithm,
+                    )
+                else:
+                    self.logger.error(f"Unsupported public key type: {type(issuer_public_key)}")
+                    return False
+
             except Exception as e:
                 self.logger.error(f"Certificate chain verification failed: {e}")
                 return False
