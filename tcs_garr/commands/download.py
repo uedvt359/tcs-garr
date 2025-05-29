@@ -1,16 +1,19 @@
 import base64
 import importlib.resources as pkg_resources
 import os
+import warnings
 
 from cryptography import x509
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
-from cryptography.hazmat.primitives.asymmetric import padding, rsa, ec, dsa
+from cryptography.hazmat.primitives.asymmetric import dsa, ec, padding, rsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
 from tcs_garr.utils import UserRole
+
+warnings.filterwarnings("ignore", message="PKCS#7 certificates could not be parsed as DER, falling back to parsing as BER")
 
 
 class DownloadCommand(BaseCommand):
