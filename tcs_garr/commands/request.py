@@ -10,6 +10,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
 from cryptography.x509.extensions import ExtensionNotFound
+import requests
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
@@ -64,6 +65,12 @@ class RequestCommand(BaseCommand):
 
         self.parser.add_argument("--wait", action="store_true", help="Wait for the certificate to be approved")
 
+        self.parser.add_argument(
+            "--disable-webhook",
+            action="store_true",
+            help="Disable calling webhook after submit request. This works only if webhook_url has been configured",
+        )
+
         # Create a mutually exclusive group for --csr and --cn (plus optional --alt_names)
         create_group = self.parser.add_mutually_exclusive_group(required=True)
         create_group.add_argument("--csr", type=str, help="Path to an existing CSR file.")
@@ -107,6 +114,9 @@ class RequestCommand(BaseCommand):
 
         if self.args.wait:
             self.__wait_for_certificate_approval(cn, certificate_id)
+
+        if not self.args.disable_webhook:
+            self.__call_webhook(cn, certificate_id)
 
     def __generate_key_csr(self, cn, alt_names, output_folder):
         """
@@ -321,3 +331,15 @@ class RequestCommand(BaseCommand):
 
         self.logger.error(f"{Fore.RED}Certificate approval timed out after {max_retries} retries.{Style.RESET_ALL}")
         exit(1)
+
+    def __call_webhook(self, cn, cert_id):
+        webhook_url = self._harica_config.webhook_url
+        if webhook_url:
+            try:
+                requestor = self._harica_client.email
+                payload = {"id": cert_id, "username": requestor}
+                response = requests.post(webhook_url, json=payload, timeout=60)
+                response.raise_for_status()
+                self.logger.info(f"Webhook sent to {webhook_url}")
+            except Exception as e:
+                self.logger.error(f"Error sending webhook: {e}")
