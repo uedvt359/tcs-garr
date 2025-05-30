@@ -1,3 +1,9 @@
+## 0.23.0-rc.0 (2025-05-30)
+
+### Feat
+
+- Add webhook notification on certificate request
+
 ## 0.22.2 (2025-05-29)
 
 ### Fix
