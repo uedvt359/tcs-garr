@@ -207,7 +207,10 @@ tcs-garr --environment stg init
    ```
 
    This command initializes the configuration file with your credentials (email,
-   password, TOTP seed, output folder, and optional proxy settings).
+   password, TOTP seed, output folder, optional proxy and optional webhook settings).
+
+   Webhook feature can be used to send notification to external service like Slack to
+   inform channel or group when a new certificate has been requested.
 
    To update an existing configuration or add proxy settings:
 
@@ -289,12 +292,13 @@ tcs-garr --environment stg init
    ```bash
    tcs-garr request --help
 
-   usage: tcs-garr request [-h] [--profile {OV,DV}] [--wait] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
+   usage: tcs-garr request [-h] [--profile {OV,DV}] [--wait] [--disable-webhook] (--csr CSR | --cn CN) [--alt_names ALT_NAMES]
 
    options:
    -h, --help            show this help message and exit
    --profile {OV,DV}     Profile to use between OV or DV. Default: OV
    --wait                Wait for the certificate to be approved
+   --disable-webhook     Disable calling webhook after submit request. This works only if webhook_url has been configured
    --csr CSR             Path to an existing CSR file.
    --cn CN               Common name of the certificate.
    --alt_names ALT_NAMES
@@ -317,6 +321,12 @@ tcs-garr --environment stg init
 
    With `--wait`` flag, the command will wait for the certificate to be approved by
    another administrator. When approved, it will be automatically downloaded.
+
+   If Webhook URL has been configured (see `init` command), the webhook will be called
+   after the certificate is requested to Harica. If `--disable-webhook` is set, the
+   webhook will not be called. Webhook feature can be used to send notification to
+   external service like Slack to inform channel or group when a new certificate has been
+   requested.
 
 6. **Approve a certificate**:
 
@@ -445,6 +455,7 @@ docker build -t tcs-garr:latest .
 | HARICA_OUTPUT_FOLDER | Directory for output files         | ~/harica_certificates |
 | HARICA_HTTP_PROXY    | HTTP Proxy                         | None                  |
 | HARICA_HTTPS_PROXY   | HTTPS Proxy                        | None                  |
+| WEBHOOK_URL          | Webhook URL                        | None                  |
 
 ### Run
 
@@ -466,6 +477,7 @@ docker run --name tcs-garr \
   -e HARICA_OUTPUT_FOLDER=${HARICA_OUTPUT_FOLDER} \
   -e HARICA_HTTP_PROXY=${HARICA_HTTP_PROXY} \
   -e HARICA_HTTPS_PROXY=${HARICA_HTTPS_PROXY} \
+  -e HARICA_WEBHOOK_URL=${HARICA_WEBHOOK_URL} \
   -v ${HARICA_OUTPUT_FOLDER}:${HARICA_OUTPUT_FOLDER} \
   tcs-garr:latest request --cn <domain> --alt_names <alt_names>
 ```

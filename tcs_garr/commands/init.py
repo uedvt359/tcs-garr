@@ -86,6 +86,7 @@ class InitCommand(BaseCommand):
             "output_folder": settings.OUTPUT_PATH,
             "http_proxy": "",
             "https_proxy": "",
+            "webhook_url": "",
         }
 
         # Check if the configuration file already exists
@@ -171,6 +172,13 @@ class InitCommand(BaseCommand):
             existing_values["https_proxy"] if force and has_existing_config else ""
         )
 
+        webhook_url_prompt = f"{Fore.GREEN}🌐 Enter Webhook URL (optional)"
+        if force and has_existing_config and existing_values["webhook_url"]:
+            webhook_url_prompt += f" [{existing_values['webhook_url']}]"
+        webhook_url = input(f"{webhook_url_prompt}: {Style.RESET_ALL}") or (
+            existing_values["webhook_url"] if force and has_existing_config else ""
+        )
+
         # Update the configuration with the user inputs
         config[section_name] = {
             "username": username,
@@ -184,6 +192,8 @@ class InitCommand(BaseCommand):
             config[section_name]["http_proxy"] = http_proxy
         if https_proxy:
             config[section_name]["https_proxy"] = https_proxy
+        if webhook_url:
+            config[section_name]["webhook_url"] = webhook_url
 
         # Write the configuration to the file
         with open(settings.CONFIG_PATH, "w") as configfile:
