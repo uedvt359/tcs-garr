@@ -87,6 +87,7 @@ class InitCommand(BaseCommand):
             "http_proxy": "",
             "https_proxy": "",
             "webhook_url": "",
+            "webhook_type": settings.WEBHOOK_TYPE,
         }
 
         # Check if the configuration file already exists
@@ -172,12 +173,30 @@ class InitCommand(BaseCommand):
             existing_values["https_proxy"] if force and has_existing_config else ""
         )
 
+        # Prompt for webhook url
         webhook_url_prompt = f"{Fore.GREEN}🌐 Enter Webhook URL (optional)"
         if force and has_existing_config and existing_values["webhook_url"]:
             webhook_url_prompt += f" [{existing_values['webhook_url']}]"
         webhook_url = input(f"{webhook_url_prompt}: {Style.RESET_ALL}") or (
             existing_values["webhook_url"] if force and has_existing_config else ""
         )
+
+        # Prompt for webhook type
+        default_type = (
+            existing_values.get("webhook_type")
+            if force and has_existing_config and existing_values.get("webhook_type")
+            else settings.WEBHOOK_TYPE
+        )
+        while True:
+            webhook_type_prompt = (
+                f"{Fore.GREEN}🔔 Enter Webhook type ('slack' or 'generic') [{default_type}]: {Style.RESET_ALL}"
+            )
+            webhook_type_input = input(webhook_type_prompt).strip() or default_type
+            if webhook_type_input.lower() in {"slack", "generic"}:
+                webhook_type = webhook_type_input.lower()
+                break
+            else:
+                print(f"{Fore.RED}❌ Invalid webhook type. Must be 'slack' or 'generic'.{Style.RESET_ALL}")
 
         # Update the configuration with the user inputs
         config[section_name] = {
@@ -194,6 +213,8 @@ class InitCommand(BaseCommand):
             config[section_name]["https_proxy"] = https_proxy
         if webhook_url:
             config[section_name]["webhook_url"] = webhook_url
+        if webhook_type:
+            config[section_name]["webhook_type"] = webhook_type
 
         # Write the configuration to the file
         with open(settings.CONFIG_PATH, "w") as configfile:

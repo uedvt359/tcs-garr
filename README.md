@@ -206,13 +206,23 @@ tcs-garr --environment stg init
    tcs-garr init
    ```
 
-   This command initializes the configuration file with your credentials (email,
-   password, TOTP seed, output folder, optional proxy and optional webhook settings).
+   This command initializes the configuration file by prompting for your credentials (email, password, TOTP seed, output folder, optional proxy, and optional webhook settings).
 
-   Webhook feature can be used to send notification to external service like Slack to
-   inform channel or group when a new certificate has been requested.
+   The webhook feature allows you to send notifications to external services (e.g., Slack) whenever a new certificate is requested.
 
-   To update an existing configuration or add proxy settings:
+   Currently, two webhook types are supported:
+
+   * **slack**: sends a formatted message to a Slack channel.
+   * **generic**: sends a `POST` request with a JSON payload containing:
+
+     ```json
+     {
+       "id": certificate_id,
+       "username": requestor
+     }
+     ```
+
+   To update an existing configuration or add proxy/webhook settings:
 
    ```bash
    tcs-garr init --force
@@ -456,6 +466,7 @@ docker build -t tcs-garr:latest .
 | HARICA_HTTP_PROXY    | HTTP Proxy                         | None                  |
 | HARICA_HTTPS_PROXY   | HTTPS Proxy                        | None                  |
 | WEBHOOK_URL          | Webhook URL                        | None                  |
+| WEBHOOK_TYPE         | Webhook Type                       | Slack                 |
 
 ### Run
 

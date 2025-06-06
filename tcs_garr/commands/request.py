@@ -10,11 +10,11 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import pkcs7
 from cryptography.x509.oid import NameOID
 from cryptography.x509.extensions import ExtensionNotFound
-import requests
 
 from tcs_garr.commands.base import BaseCommand
 from tcs_garr.exceptions import CertificateNotApprovedException
 from tcs_garr.utils import UserRole
+from tcs_garr.notifications import NotificationManager
 
 
 class RequestCommand(BaseCommand):
@@ -334,12 +334,19 @@ class RequestCommand(BaseCommand):
 
     def __call_webhook(self, cn, cert_id):
         webhook_url = self._harica_config.webhook_url
+        webhook_type = self._harica_config.webhook_type
         if webhook_url:
             try:
                 requestor = self._harica_client.email
-                payload = {"id": cert_id, "username": requestor}
-                response = requests.post(webhook_url, json=payload, timeout=60)
-                response.raise_for_status()
-                self.logger.info(f"Webhook sent to {webhook_url}")
+
+                manager = NotificationManager(webhook_type=webhook_type, webhook_url=webhook_url)
+
+                title = "Certificate Request"
+                message = f"Certificate for {cn} has been requested."
+
+                details = {"id": cert_id, "username": requestor}
+
+                manager.success(title=title, message=message, details=details)
+
             except Exception as e:
-                self.logger.error(f"Error sending webhook: {e}")
+                self.logger.error(f"Error sending webhook via NotificationManager: {e}")

@@ -10,3 +10,4 @@ CONFIG_PATHS = [
 ]
 OUTPUT_FOLDER = "harica_certificates"
 OUTPUT_PATH = os.path.join(os.path.expanduser("~"), OUTPUT_FOLDER)
+WEBHOOK_TYPE = "slack"

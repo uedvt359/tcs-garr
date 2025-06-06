@@ -67,6 +67,7 @@ class HaricaClientConfig:
         self.http_proxy = None
         self.https_proxy = None
         self.webhook_url = None
+        self.webhook_type = None
 
         # Load configuration
         self._load_config(environment)
@@ -102,6 +103,7 @@ class HaricaClientConfig:
                         "http_proxy": config.get(section_name, "http_proxy", fallback=None),
                         "https_proxy": config.get(section_name, "https_proxy", fallback=None),
                         "webhook_url": config.get(section_name, "webhook_url", fallback=None),
+                        "webhook_type": config.get(section_name, "webhook_type", fallback=settings.WEBHOOK_TYPE),
                     }
                 else:
                     logger.error(f"No configuration found for environment '{environment}' in {path}")
@@ -119,6 +121,7 @@ class HaricaClientConfig:
                 "http_proxy": os.getenv("HARICA_HTTP_PROXY") or os.getenv("HTTP_PROXY"),
                 "https_proxy": os.getenv("HARICA_HTTPS_PROXY") or os.getenv("HTTPS_PROXY"),
                 "webhook_url": os.getenv("HARICA_WEBHOOK_URL") or os.getenv("WEBHOOK_URL"),
+                "webhook_type": os.getenv("HARICA_WEBHOOK_TYPE") or os.getenv("WEBHOOK_TYPE"),
             }
 
             # Ensure all required environment variables are set
@@ -141,6 +144,7 @@ class HaricaClientConfig:
         self.http_proxy = config_data["http_proxy"]
         self.https_proxy = config_data["https_proxy"]
         self.webhook_url = config_data["webhook_url"]
+        self.webhook_type = config_data["webhook_type"]
 
     def _validate_config(self, config_data):
         """
