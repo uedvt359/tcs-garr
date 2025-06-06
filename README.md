@@ -8,6 +8,8 @@
 [![License: GPLv3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Contributions welcome](https://img.shields.io/badge/Contributions-Welcome-brightgreen.svg)
 
+[![PyPI Downloads](https://static.pepy.tech/badge/tcs-garr)](https://pepy.tech/projects/tcs-garr)
+
 ## Overview
 
 The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica
