@@ -54,18 +54,19 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/${{ steps.docker_image.outputs.lowercase }}:${{ github.ref_name }}
 
-      - name: Set tcs_tag to github.ref_name or latest tag
+      - name: Set tcs_tag from tag or fallback to latest
         id: set_tag
         run: |
-          if [ -n "${{ github.ref_name }}" ]; then
-            echo "Using github.ref_name: ${{ github.ref_name }}"
-            echo "tcs_tag=${{ github.ref_name }}" >> $GITHUB_ENV
-          else
-            echo "github.ref_name not set, using latest git tag"
+          echo "Trigger event: ${{ github.event_name }}"
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.ref_type }}" != "tag" ]]; then
+            echo "Manual run or non-tag ref, using latest tag"
             git fetch --tags
-            latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-            echo "Latest tag is $latest_tag"
+            latest_tag=$(git describe --tags "$(git rev-list --tags --max-count=1)")
             echo "tcs_tag=$latest_tag" >> $GITHUB_ENV
+          else
+            echo "Triggered by tag: ${{ github.ref_name }}"
+            echo "tcs_tag=${{ github.ref_name }}" >> $GITHUB_ENV
+          fi
 
       - name: Trigger auto-harica workflow
         run: |
