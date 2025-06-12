@@ -1,3 +1,9 @@
+## 0.23.3 (2025-06-12)
+
+### Fix
+
+- Add CA cross-signed with Harica 2015 for better compatibility
+
 ## 0.23.2 (2025-06-06)
 
 ### Fix
