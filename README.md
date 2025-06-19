@@ -490,6 +490,10 @@ docker build -t tcs-garr:latest .
 | WEBHOOK_URL          | Webhook URL                        | None                  |
 | WEBHOOK_TYPE         | Webhook Type                       | Slack                 |
 
+Info about
+[webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook)
+environment variable.
+
 ### Run
 
 For the following commands, you can either use the builded image or pull the image from
