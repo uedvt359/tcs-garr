@@ -128,20 +128,23 @@ tcs-garr init
 
 This will create a `tcs-garr.conf` file in your home directory under `.config/tcs-garr`
 path. This file will contain your Harica username, password, TOTP seed, folder for
-issued certificates, and HTTP/HTTPS proxy settings (if needed). The file will have secure permissions.
+issued certificates, and HTTP/HTTPS proxy settings (if needed). The file will have
+secure permissions.
 
 If a configuration file is not found, the system will notify you to initialize the
 configuration using the `tcs-garr init` command.
 
 ### Updating Configuration
 
-If you need to update your configuration (including adding or modifying proxy settings), you can use:
+If you need to update your configuration (including adding or modifying proxy settings),
+you can use:
 
 ```bash
 tcs-garr init --force
 ```
 
-This will override existing parameters with new values. You can use this command to add or update HTTP/HTTPS proxy settings.
+This will override existing parameters with new values. You can use this command to add
+or update HTTP/HTTPS proxy settings.
 
 ## Usage
 
@@ -208,21 +211,26 @@ tcs-garr --environment stg init
    tcs-garr init
    ```
 
-   This command initializes the configuration file by prompting for your credentials (email, password, TOTP seed, output folder, optional proxy, and optional webhook settings).
+   This command initializes the configuration file by prompting for your credentials
+   (email, password, TOTP seed, output folder, optional proxy, and optional webhook
+   settings).
 
-   The webhook feature allows you to send notifications to external services (e.g., Slack) whenever a new certificate is requested.
+   #### Webhook
 
-   Currently, two webhook types are supported:
+   The webhook feature allows you to send notifications to external services (e.g.
+   Slack) whenever a new certificate is requested.
 
-   * **slack**: sends a formatted message to a Slack channel.
-   * **generic**: sends a `POST` request with a JSON payload containing:
+      Currently, two webhook types are supported:
 
-     ```json
-     {
-       "id": certificate_id,
-       "username": requestor
-     }
-     ```
+      - **slack**: sends a formatted message to a Slack channel.
+      - **generic**: sends a `POST` request with a JSON payload containing:
+
+      ```json
+      {
+         "id": certificate_id,
+         "username": requestor
+      }
+      ```
 
    To update an existing configuration or add proxy/webhook settings:
 
@@ -240,7 +248,9 @@ tcs-garr --environment stg init
 
 3. **List all certificates**:
 
-   The `list` command allows you to generate detailed reports of SSL certificates from the Harica service. It supports various filtering options and output formats to help you manage your certificates effectively.
+   The `list` command allows you to generate detailed reports of SSL certificates from
+   the Harica service. It supports various filtering options and output formats to help
+   you manage your certificates effectively.
 
    ```bash
    tcs-garr list --help
@@ -266,18 +276,28 @@ tcs-garr --environment stg init
    This command will list all available certificates. You can filter them by date range
    using the `--expired-since` and `--expiring-in` options.
 
-
-   By default, the command displays certificate information in a tabular format, showing transaction ID, common name, expiration date, status, information, alternative names, and requestor. When using the `--export` or `--json` option without a filename, the information is displayed in JSON format on the terminal and saved to the default file. With a filename specified, the data is saved to that file without terminal output.
+   By default, the command displays certificate information in a tabular format, showing
+   transaction ID, common name, expiration date, status, information, alternative names,
+   and requestor. When using the `--export` or `--json` option without a filename, the
+   information is displayed in JSON format on the terminal and saved to the default
+   file. With a filename specified, the data is saved to that file without terminal
+   output.
 
    #### Important Note on `--full` Option
 
-   The extended information provided by `--full` includes certificate metadata such as issuer details, certificate content, key usage, and other technical parameters from the certification authority.
+   The extended information provided by `--full` includes certificate metadata such as
+   issuer details, certificate content, key usage, and other technical parameters from
+   the certification authority.
 
    When using the `--full` flag, be aware of the following:
 
-   1. **Performance Impact**: This option significantly increases processing time as it requires an additional API request for each certificate in the result set. For large certificate lists, this operation can take several minutes to complete.
+   1. **Performance Impact**: This option significantly increases processing time as it
+      requires an additional API request for each certificate in the result set. For
+      large certificate lists, this operation can take several minutes to complete.
 
-   2. **Rate Limiting**: The Harica platform implements rate limiting on API requests. Using `--full` with a large number of certificates may trigger rate limiting responses, especially when running multiple commands in quick succession.
+   2. **Rate Limiting**: The Harica platform implements rate limiting on API requests.
+      Using `--full` with a large number of certificates may trigger rate limiting
+      responses, especially when running multiple commands in quick succession.
 
 4. **Download a certificate**:
 
