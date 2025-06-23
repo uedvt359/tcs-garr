@@ -342,6 +342,42 @@ class HaricaClient:
 
         return data
 
+    def list_acme_certificates(self, status: CertificateStatus = CertificateStatus.VALID):
+        """
+        Retrieves all ACME certificates for all ACME accounts filtered by status.
+
+        Args:
+            status (CertificateStatus): The status of certificates to retrieve.
+
+        Returns:
+            list[dict]: List of ACME certificates across all accounts filtered by status.
+        """
+        acme_certs = []
+        accounts = self.list_acme_accounts()
+
+        for account in accounts:
+            account_id = account.get("id")
+            if not account_id:
+                continue
+
+            payload = {"id": account_id}
+            endpoint = "/api/OrganizationAdmin/GetAcmeCertificatesOfEntry"
+
+            try:
+                response = self.__make_post_request(endpoint, data=payload)
+                response.raise_for_status()
+                certs = response.json()
+            except Exception as e:
+                self.logger.error(f"Failed to get ACME certificates for account {account_id}: {e}")
+                continue
+
+            # Filter certificates by status
+            filtered_certs = [cert for cert in certs if cert.get("statusName") == status.value]
+
+            acme_certs.extend(filtered_certs)
+
+        return acme_certs
+
     def build_domains_list(self, domains):
         """
         Builds a list of domain information for the certificate request.
@@ -635,6 +671,16 @@ class HaricaClient:
         ).json()
 
         return domain_validities
+
+    def list_acme_accounts(self):
+        """
+        Retrieve the list of ACME accounts from the Harica API.
+
+        Returns:
+            list: A list of ACME account entries.
+        """
+
+        return self.__make_post_request("/api/OrganizationAdmin/GetAcmeEntries", data={"key": "", "value": ""}).json()
 
     def validate_domains(self, domains=[]):
         """

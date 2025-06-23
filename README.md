@@ -69,6 +69,7 @@ Other roles, apart from **USER**, require 2FA and are provided by an administrat
 | -------- | ----------------------- | ---------- |
 | approve  | SSL_ENTERPRISE_APPROVER | ✔️          |
 | cancel   | USER                    | ❌          |
+| acme     | ENTERPRISE_ADMIN        | ✔️          |
 | domains  | ENTERPRISE_ADMIN        | ✔️          |
 | download | USER                    | ❌          |
 | init     | None                    | ❌          |
@@ -160,13 +161,15 @@ To view all available commands and options:
 ```bash
 tcs-garr --help
 
-usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}] {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
+usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}]
+                {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
+  {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
                         Available commands
+    acme                List ACME accounts configured in Harica
     approve             Approve a certificate by ID
     cancel              Cancel a request by ID
     domains             List available domains
