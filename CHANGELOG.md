@@ -1,3 +1,9 @@
+## 0.24.0-rc.0 (2025-06-23)
+
+### Feat
+
+- Add acme list accounts and certificates
+
 ## 0.23.3 (2025-06-12)
 
 ### Fix
