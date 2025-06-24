@@ -1,3 +1,9 @@
+## 0.24.0-rc.1 (2025-06-24)
+
+### Fix
+
+- Fix list output certificates
+
 ## 0.24.0-rc.0 (2025-06-23)
 
 ### Feat
