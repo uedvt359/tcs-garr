@@ -43,6 +43,10 @@ class RevokeCommand(BaseCommand):
 
     def is_certificate_valid_for_revocation(self, cert) -> bool:
         """Checks if a certificate is eligible for revocation."""
+        if "acmeEntryId" in cert:
+            self.logger.error("ACME certificates cannot be revoked via tcs-garr.")
+            return False
+
         if not cert:
             self.logger.error("Certificate not found.")
             return False

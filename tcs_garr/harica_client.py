@@ -223,12 +223,32 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        res = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
+        # Step 2: Try the legacy endpoint
+        try:
+            res = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
+            if res.status_code == 404:
+                return None
 
-        if res.status_code == 404:
-            return None
+            data = res.json()
 
-        return res.json()
+            if isinstance(data, dict) and not data.get("certificate", True):
+                raise ValueError("Certificate not available via GetSSLCertificate")
+
+            return data
+        except Exception:
+            pass
+
+        # Step 3: Search ACME certificates if not available via main API
+        try:
+            for status in CertificateStatus:
+                acme_certs = self.list_acme_certificates(status=status)
+                for cert in acme_certs:
+                    if cert.get("id") == certificate_id:
+                        return cert
+        except Exception as e:
+            logger.error(f"Failed to retrieve certificate from ACME list: {e}")
+
+        return None
 
     def get_certificate_info(self, certificate_id):
         cert_info = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
@@ -344,7 +364,8 @@ class HaricaClient:
 
     def list_acme_certificates(self, status: CertificateStatus = CertificateStatus.VALID):
         """
-        Retrieves all ACME certificates for all ACME accounts filtered by status.
+        Retrieves all ACME certificates for all ACME accounts filtered by status,
+        and annotates each certificate with the corresponding user.
 
         Args:
             status (CertificateStatus): The status of certificates to retrieve.
@@ -357,6 +378,7 @@ class HaricaClient:
 
         for account in accounts:
             account_id = account.get("id")
+            user = account.get("userEmail")
             if not account_id:
                 continue
 
@@ -371,10 +393,10 @@ class HaricaClient:
                 self.logger.error(f"Failed to get ACME certificates for account {account_id}: {e}")
                 continue
 
-            # Filter certificates by status
-            filtered_certs = [cert for cert in certs if cert.get("statusName") == status.value]
-
-            acme_certs.extend(filtered_certs)
+            for cert in certs:
+                if cert.get("statusName") == status.value:
+                    cert["userEmail"] = user
+                    acme_certs.append(cert)
 
         return acme_certs
 

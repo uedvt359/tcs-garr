@@ -118,7 +118,7 @@ class ListCertificatesCommand(BaseCommand):
 
     def _normalize_certificate(self, cert):
         """
-        Normalize certificate data to have consistent field names for both regular and ACME certificates.
+        Normalize certificate data to have consistent field names for both API and ACME certificates.
 
         Args:
             cert (dict): Certificate data
@@ -139,7 +139,7 @@ class ListCertificatesCommand(BaseCommand):
             normalized["transactionId"] = cert.get("id", "")
             normalized["transactionStatusMessage"] = cert.get("statusName", "")
             normalized["user"] = cert.get("revokedByEmail", "ACME")  # ACME certs don't have user field
-            normalized["userEmail"] = cert.get("revokedByEmail", "")
+            normalized["userEmail"] = cert.get("userEmail", "")
 
             # Parse domains from SANS field for ACME certificates
             domains = []
@@ -159,7 +159,7 @@ class ListCertificatesCommand(BaseCommand):
             normalized["domains"] = domains
             normalized["is_acme"] = True
         else:
-            # Regular certificate - ensure all fields exist
+            # API certificate - ensure all fields exist
             normalized["certificateValidTo"] = cert.get("certificateValidTo", "")
             normalized["dN"] = cert.get("dN", "")
             normalized["status"] = cert.get("status", "")
@@ -428,10 +428,10 @@ class ListCertificatesCommand(BaseCommand):
                 expiration_date = str(item.get("certificateValidTo", ""))
                 status = str(item.get("status", ""))
                 status_info = str(item.get("transactionStatusMessage", ""))
-                user = str(item.get("user", ""))
+                user = str(item.get("user") or item.get("userEmail") or "")
 
                 # Add certificate type indicator
-                cert_type = "ACME" if item.get("is_acme", False) else "Regular"
+                cert_type = "ACME" if item.get("is_acme", False) else "API"
 
                 alt_names = ";\n".join(domain.get("fqdn", "") for domain in item.get("domains", []) if domain.get("fqdn"))
 

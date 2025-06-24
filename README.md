@@ -12,17 +12,23 @@
 
 ## Overview
 
-The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica
-platform. It offers features like listing, downloading, issuing certificates, approving
-requests, and generating domain validation tokens, all via the Harica API.
+**TCS-GARR Client** is a CLI tool for interacting with the HARICA platform via its API.
 
-## Warning ⚠️
+It supports operations such as:
+
+* Listing and downloading certificates
+* Requesting and approving certificates
+* Managing ACME accounts and domain validations
+* Generating domain validation tokens
+* Exporting reports and more
+
+## ⚠️ Disclaimer
 
 **Consortium GARR is not affiliated with HARICA, and the present work has not been
 endorsed by or agreed with HARICA.**
 
-**Consortium GARR provides this code to the community for sharing purposes but does not
-commit to providing support, maintenance, or further development of the code. Use it at
+**Consortium GARR provides this code as-is to the community for sharing purposes but does not
+garantee support, maintenance, or further development of the code. Use it at
 your own discretion.**
 
 ### Prerequisites
@@ -30,7 +36,7 @@ your own discretion.**
 Before using the TCS-GARR client, please ensure the following:
 
 1. **Create a local account on the Harica platform**: You must create a local account on
-   Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM
+   Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM/edugain
    credentials, as they do not support API access.
 
    - If you're already logged in with an academic login, you can create a new local
@@ -54,11 +60,11 @@ Before using the TCS-GARR client, please ensure the following:
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
 > [!IMPORTANT]
-> ⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
+> 🕒 The OTP (One-Time Password) is generated based on the date and time of your PC. If
 > the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
 > your device's date and time are correct and synchronized with a public NTP server.
 
-### Command Roles and 2FA Requirements
+### 🔐 Command Roles and 2FA Requirements
 
 **USER** is the default role assigned to a logged-in user with no special permissions
 and who has not been granted any additional roles by an administrator.
@@ -81,7 +87,7 @@ Other roles, apart from **USER**, require 2FA and are provided by an administrat
 | validate | ENTERPRISE_ADMIN        | ✔️          |
 | whoami   | USER                    | ❌          |
 
-## Installation
+## 🛠 Installation
 
 You can install the TCS-GARR client in a virtual environment using `pip` or via `pipx`.
 
@@ -118,7 +124,7 @@ You can install the TCS-GARR client in a virtual environment using `pip` or via 
     PIPX_BIN_DIR=/usr/local/bin pipx install tcs-garr
     ```
 
-## Configuration
+## ⚙️ Configuration
 
 After installation, the first time you run the client, you will need to initialize the
 configuration file with your credentials by running:
@@ -147,7 +153,7 @@ tcs-garr init --force
 This will override existing parameters with new values. You can use this command to add
 or update HTTP/HTTPS proxy settings.
 
-## Usage
+## 🚀 Usage
 
 Once the setup is complete, you can use the TCS-GARR client for various operations. The
 command syntax follows this pattern:
@@ -156,7 +162,7 @@ command syntax follows this pattern:
 tcs-garr [command] [options]
 ```
 
-To view all available commands and options:
+To see all available commands and options:
 
 ```bash
 tcs-garr --help
@@ -206,7 +212,7 @@ configuration file using the following command:
 tcs-garr --environment stg init
 ```
 
-### Available Commands
+### 🔧 Available Commands
 
 1. **Initialize configuration**:
 
@@ -228,12 +234,12 @@ tcs-garr --environment stg init
       - **slack**: sends a formatted message to a Slack channel.
       - **generic**: sends a `POST` request with a JSON payload containing:
 
-      ```json
-      {
-         "id": certificate_id,
-         "username": requestor
-      }
-      ```
+         ```json
+         {
+            "id": certificate_id,
+            "username": requestor
+         }
+         ```
 
    To update an existing configuration or add proxy/webhook settings:
 
@@ -276,12 +282,12 @@ tcs-garr --environment stg init
    --json [JSON]         Alias for --export. Export certificates to json file.
    ```
 
-   This command will list all available certificates. You can filter them by date range
-   using the `--expired-since` and `--expiring-in` options.
+   This command will list all available certificates, included ACME ones. You can filter them by date range
+   using the `--expired-since`, `--expiring-in` or `--fqdn` options.
 
    By default, the command displays certificate information in a tabular format, showing
-   transaction ID, common name, expiration date, status, information, alternative names,
-   and requestor. When using the `--export` or `--json` option without a filename, the
+   certificate ID, common name, expiration date, status, information, alternative names,
+   requestor and type (if requested via API or ACME) . When using the `--export` or `--json` option without a filename, the
    information is displayed in JSON format on the terminal and saved to the default
    file. With a filename specified, the data is saved to that file without terminal
    output.
@@ -322,6 +328,8 @@ tcs-garr --environment stg init
    Replace `ID` with the ID of the certificate you wish to download. You can use
    `pemBundle` or `certificate` as arguments for specific download formats.
 
+   The `download` command allows you to download certificates requested via API or ACME.
+
 5. **Request a new certificate**:
 
    ```bash
@@ -340,7 +348,7 @@ tcs-garr --environment stg init
                            Comma-separated alternative names (only used with --cn).
    ```
 
-   The `request` command is used to submit a new certificate request to Harica.
+   The `request` command is used to submit a new certificate request to Harica via API.
 
    You can either provide an existing Certificate Signing Request (`--csr`) or specify
    the details for generating a new CSR, including the Common Name (`--cn`) and any
@@ -462,17 +470,19 @@ tcs-garr --environment stg init
    --id ID     ID of the certificate to revoke.
    ```
 
-## Docker
+   Only certificates requested via API can be revoked. ACME certificates cannot be
+   revoked via this client.
 
-Docker image is available at GitHub container
-[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
+## 🐳 Docker
+
+Docker image is available at GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
 pull them via:
 
 ```bash
 docker pull ghcr.io/consortiumgarr/tcs-garr:<your_desired_version>
 ```
 
-### Build
+### 📦 Build
 
 Example of docker image build command:
 
@@ -493,15 +503,11 @@ docker build -t tcs-garr:latest .
 | WEBHOOK_URL          | Webhook URL                        | None                  |
 | WEBHOOK_TYPE         | Webhook Type                       | Slack                 |
 
-Info about
-[webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook)
-environment variable.
+Info about [webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook) environment variable.
 
-### Run
+### ▶ Run
 
-For the following commands, you can either use the builded image or pull the image from
-GitHub container
-[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
+For the following commands, you can either use the builded image or pull the image from GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
 
 ```bash
 docker run --name tcs-garr tcs-garr:latest --version
