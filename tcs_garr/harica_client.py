@@ -472,6 +472,30 @@ class HaricaClient:
 
         return {}
 
+    def disable_acme_account(self, id: str) -> bool:
+        """Disable an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/DisableAcmeEntry"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
     def get_acme_available_domains(self, id: str) -> list[dict]:
         """Get available domains for an ACME account.
 

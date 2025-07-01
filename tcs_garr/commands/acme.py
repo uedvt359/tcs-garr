@@ -52,6 +52,10 @@ class AcmeAccountsCommand(BaseCommand):
             help="Transaction type for the new ACME account",
         )
 
+        # Subcommand to disable an ACME account
+        disable_parser = subparsers.add_parser("disable", help="Disable an ACME account")
+        disable_parser.add_argument("account_id", type=str, help="ID of the ACME account to disable")
+
         # Subcommand for domains
         domains_parser = subparsers.add_parser("domains", help="Perform actions on ACME account domains and rules")
         domains_parser.add_argument("account_id", type=str, help="ID of the ACME account to retrieve domains for")
@@ -101,6 +105,15 @@ class AcmeAccountsCommand(BaseCommand):
             self._account_info(self.args.account_id)
         elif action == "create":
             self._create_account(self.args.friendly_name, self.args.transaction_type)
+        elif action == "disable":
+            self.logger.info(f"{Fore.YELLOW}Disabling ACME account:{Style.RESET_ALL}\n")
+            self._account_info(self.args.account_id)
+
+            confirm = input(f"{Fore.RED}Are you sure you want to disable this ACME account? (Y/n): {Style.RESET_ALL}")
+            if confirm == "Y":
+                self._disable_account()
+            else:
+                self.logger.info("Operation cancelled.")
         elif action == "domains":
             domain_action = self.args.domain_action
 
@@ -482,3 +495,17 @@ class AcmeAccountsCommand(BaseCommand):
             self.logger.info(f"{output}\n")
         except Exception as e:
             self.logger.error(f"{Fore.RED}Failed to create ACME account: {e}{Style.RESET_ALL}")
+
+    def _disable_account(self):
+        """Disable an ACME account."""
+        try:
+            res = self.harica_client.disable_acme_account(self.args.account_id)
+
+            if res:
+                self.logger.info(
+                    f"{Fore.GREEN}Successfully disabled ACME account with ID: {self.args.account_id}{Style.RESET_ALL}"
+                )
+            else:
+                self.logger.error(f"{Fore.RED}Failed to disable ACME account with ID: {self.args.account_id}{Style.RESET_ALL}")
+        except Exception as e:
+            self.logger.error(f"{Fore.RED}Failed to disable ACME account: {e}{Style.RESET_ALL}")

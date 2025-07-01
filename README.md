@@ -478,13 +478,14 @@ tcs-garr --environment stg init
 12. **Acme accounts**:
 
    ```bash
-   usage: tcs-garr acme [-h] {list,info,create,domains} ...
+   usage: main.py acme [-h] {list,info,create,disable,domains} ...
 
    positional arguments:
-   {list,info,create,domains}
+   {list,info,create,disable,domains}
       list                List all ACME accounts
       info                Get information on a specific ACME account including secrets
       create              Create a new ACME account
+      disable             Disable an ACME account
       domains             Perform actions on ACME account domains and rules
 
    options:
@@ -494,7 +495,8 @@ tcs-garr --environment stg init
    This command allows you to manage ACME accounts, including listing all accounts,
    getting information on a specific account, creating new accounts, and performing
    actions on ACME account domains and rules. You can use the `list`, `info`, `create`,
-   and `domains` subcommands to perform these actions.
+   `disable` and `domains` subcommands to perform these actions. Check `help` for each
+   subcommand for more details.
 
 ## 🐳 Docker
 
