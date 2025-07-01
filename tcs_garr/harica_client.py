@@ -61,6 +61,7 @@ class HaricaClient:
         self.request_verification_token = None  # CSRF token
         self.roles = set()
         self.full_name = None
+        self.organization = None
 
         self.prepare_client(force=False)  # Prepare client on initialization
 
@@ -192,6 +193,7 @@ class HaricaClient:
         current_logged_in_user = self.get_logged_in_user_profile()
         self.roles = parse_roles(current_logged_in_user["role"])
         self.full_name = current_logged_in_user["fullName"]
+        self.organization = current_logged_in_user["organization"]
 
     def get_logged_in_user_profile(self):
         """
@@ -390,7 +392,7 @@ class HaricaClient:
                 response.raise_for_status()
                 certs = response.json()
             except Exception as e:
-                self.logger.error(f"Failed to get ACME certificates for account {account_id}: {e}")
+                logger.error(f"Failed to get ACME certificates for account {account_id}: {e}")
                 continue
 
             for cert in certs:
@@ -399,6 +401,71 @@ class HaricaClient:
                     acme_certs.append(cert)
 
         return acme_certs
+
+    def create_acme_account(self, friendly_name: str, transaction_type: str = "SSL OV"):
+        """Creates an ACME account.
+
+        Parameters
+        ----------
+        friendly_name : str
+            Friendly name for the ACME account.
+        transaction_type : str, optional
+            Transaction type, by default "SSL OV". Available options: "SSL OV", "SSL DV"
+
+        """
+
+        def get_organization_id():
+            endpoint = "/api/OrganizationAdmin/SearchGroups"
+            payload = {"key": "", "value": ""}
+            response = self.__make_post_request(endpoint, data=payload)
+            response.raise_for_status()
+
+            groups = response.json()
+            group_id = ""
+
+            for group in groups:
+                if group["alias"] == self.organization:
+                    group_id = group["id"]
+                    break
+
+            if not group_id:
+                raise Exception(f"Group for {self.organization} not found")
+
+            endpoint = "/api/OrganizationAdmin/GetOrganizationsByGroupId"
+            payload = {"id": group_id}
+            response = self.__make_post_request(endpoint, data=payload)
+            response.raise_for_status()
+
+            orgs = response.json()
+            org_id = ""
+
+            for org in orgs:
+                if org["organization"] == self.organization:
+                    org_id = org["organizationId"]
+                    break
+
+            if not org_id:
+                raise Exception(f"Organization {self.organization} not found")
+
+            return org_id
+
+        payload = {
+            "friendlyName": friendly_name,
+            "transactionType": transaction_type,
+            "id": get_organization_id(),
+        }
+        endpoint = "/api/OrganizationAdmin/CreateAcmeEntry"
+
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        accounts = self.list_acme_accounts()
+
+        for account in accounts:
+            if account["friendlyName"] == friendly_name:
+                return account
+
+        return {}
 
     def build_domains_list(self, domains):
         """
@@ -754,7 +821,7 @@ class HaricaClient:
             self.__make_post_request(
                 "/api/OrganizationAdmin/CreatePrevalidatedValidation",
                 data={
-                    "usersEmail": self.get_logged_in_user_profile()["email"],  # Email of the currently logged-in user
+                    "usersEmail": self.email,
                     "validationMethodName": "3.2.2.4.7",  # Fixed validation method name
                     "organizationId": domain_id,  # ID of the domain to validate
                     "whoisEmail": "",  # Empty WHOIS email, can be customized
