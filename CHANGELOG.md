@@ -1,3 +1,9 @@
+## 0.24.0-rc.6 (2025-07-01)
+
+### Feat
+
+- acme support to list available domains, list rules, add/remove rules
+
 ## 0.24.0-rc.5 (2025-07-01)
 
 ### Feat
