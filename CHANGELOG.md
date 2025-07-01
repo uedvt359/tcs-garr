@@ -1,3 +1,9 @@
+## 0.24.0-rc.5 (2025-07-01)
+
+### Feat
+
+- helper function to format and check a date
+
 ## 0.24.0-rc.4 (2025-07-01)
 
 ## 0.24.0-rc.3 (2025-07-01)
