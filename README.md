@@ -27,8 +27,8 @@ It supports operations such as:
 **Consortium GARR is not affiliated with HARICA, and the present work has not been
 endorsed by or agreed with HARICA.**
 
-**Consortium GARR provides this code as-is to the community for sharing purposes but does not
-garantee support, maintenance, or further development of the code. Use it at
+**Consortium GARR provides this code as-is to the community for sharing purposes but
+does not garantee support, maintenance, or further development of the code. Use it at
 your own discretion.**
 
 ### Prerequisites
@@ -39,18 +39,18 @@ Before using the TCS-GARR client, please ensure the following:
    Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM/edugain
    credentials, as they do not support API access.
 
-   - If you're already logged in with an academic login, you can create a new local
+   * If you're already logged in with an academic login, you can create a new local
      account using an email alias. Academic login users do not have a password and
      therefore cannot use the API.
 
 2. **Required Roles and 2FA**: To use specific API commands, your account must have the
    appropriate roles and 2FA enabled where required. Check the [Command Roles and 2FA
-   Requirements](#command-roles-and-2fa-requirements) section for details.
+   Requirements](#-command-roles-and-2fa-requirements) section for details.
 
-   - **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
+   * **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
      perform actions such as approving certificates or managing domain validation.
 
-   - If administrative permissions are required (e.g., domain validation), request an
+   * If administrative permissions are required (e.g., domain validation), request an
      existing administrator to elevate your account.
 
 > [!CAUTION]
@@ -231,8 +231,8 @@ tcs-garr --environment stg init
 
       Currently, two webhook types are supported:
 
-      - **slack**: sends a formatted message to a Slack channel.
-      - **generic**: sends a `POST` request with a JSON payload containing:
+      * **slack**: sends a formatted message to a Slack channel.
+      * **generic**: sends a `POST` request with a JSON payload containing:
 
          ```json
          {
@@ -264,8 +264,8 @@ tcs-garr --environment stg init
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]]
-                     [--fqdn FQDN] [--full] [--export [EXPORT]] [--json [JSON]]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--fqdn FQDN]
+                        [--full] [--export [EXPORT]] [--json [JSON]] [--type {ACME,API}] [--acme-account-id ACME_ACCOUNT_ID]
 
    options:
    -h, --help            show this help message and exit
@@ -278,19 +278,21 @@ tcs-garr --environment stg init
    --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user. Use this if you have Approver role or Admin role.
    --fqdn FQDN           Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).
    --full                Retrieve full certificate information.
-   --export [EXPORT]     Export certificates to json file. Without arg uses default file, with arg specifies output file.
+   --export [EXPORT]     Export certificates to json file. Without arg uses default file, with arg specifies output file (e.g. --export output.json).
    --json [JSON]         Alias for --export. Export certificates to json file.
+   --type {ACME,API}     Filter certificates by type.
+   --acme-account-id ACME_ACCOUNT_ID   Filter certificates by acme account id.
    ```
 
-   This command will list all available certificates, included ACME ones. You can filter them by date range
-   using the `--expired-since`, `--expiring-in` or `--fqdn` options.
+   This command will list all available certificates, included ACME ones. You can filter
+   them by date range using the `--expired-since`, `--expiring-in` or `--fqdn` options.
 
    By default, the command displays certificate information in a tabular format, showing
    certificate ID, common name, expiration date, status, information, alternative names,
-   requestor and type (if requested via API or ACME) . When using the `--export` or `--json` option without a filename, the
-   information is displayed in JSON format on the terminal and saved to the default
-   file. With a filename specified, the data is saved to that file without terminal
-   output.
+   requestor and type (if requested via API or ACME) . When using the `--export` or
+   `--json` option without a filename, the information is displayed in JSON format on
+   the terminal and saved to the default file. With a filename specified, the data is
+   saved to that file without terminal output.
 
    #### Important Note on `--full` Option
 
@@ -473,9 +475,31 @@ tcs-garr --environment stg init
    Only certificates requested via API can be revoked. ACME certificates cannot be
    revoked via this client.
 
+12. **Acme accounts**:
+
+   ```bash
+   usage: tcs-garr acme [-h] {list,info,create,domains} ...
+
+   positional arguments:
+   {list,info,create,domains}
+      list                List all ACME accounts
+      info                Get information on a specific ACME account including secrets
+      create              Create a new ACME account
+      domains             Perform actions on ACME account domains and rules
+
+   options:
+   -h, --help            show this help message and exit
+   ```
+
+   This command allows you to manage ACME accounts, including listing all accounts,
+   getting information on a specific account, creating new accounts, and performing
+   actions on ACME account domains and rules. You can use the `list`, `info`, `create`,
+   and `domains` subcommands to perform these actions.
+
 ## 🐳 Docker
 
-Docker image is available at GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
+Docker image is available at GitHub container
+[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
 pull them via:
 
 ```bash
@@ -503,11 +527,15 @@ docker build -t tcs-garr:latest .
 | WEBHOOK_URL          | Webhook URL                        | None                  |
 | WEBHOOK_TYPE         | Webhook Type                       | Slack                 |
 
-Info about [webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook) environment variable.
+Info about
+[webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook)
+environment variable.
 
 ### ▶ Run
 
-For the following commands, you can either use the builded image or pull the image from GitHub container [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
+For the following commands, you can either use the builded image or pull the image from
+GitHub container
+[registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr).
 
 ```bash
 docker run --name tcs-garr tcs-garr:latest --version
