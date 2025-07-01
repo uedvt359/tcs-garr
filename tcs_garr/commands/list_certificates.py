@@ -34,7 +34,7 @@ class ListCertificatesCommand(BaseCommand):
         """
         super().__init__(args)
         self.command_name = "list"  # Set the command name to "list"
-        self.help_text = "Generate a report from Harica"  # Help text for the command
+        self.help_text = "List and filter certificates"  # Help text for the command
 
     def configure_parser(self, parser):
         """
@@ -385,6 +385,7 @@ class ListCertificatesCommand(BaseCommand):
 
         # Retrieve the list of certificates from the Harica client
         # Handle pagination and statues if admin
+        self.logger.info(f"{Fore.BLUE}Retrieving certificates...{Style.RESET_ALL}")
 
         # if user role is only USER and does not have any other role
         # get only user certificates

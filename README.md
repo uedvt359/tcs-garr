@@ -182,7 +182,7 @@ positional arguments:
     download            Download a certificate by ID
     init                Generate Harica config file
     k8s                 Generate Kubernetes TLS resource file
-    list                Generate a report from Harica
+    list                List and filter certificates
     request             Request a new certificate
     revoke              Revoke a certificate by ID
     upgrade             Self-upgrade command for the app.
