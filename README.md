@@ -196,6 +196,8 @@ options:
   --no-check-release    Skip checking for a new release
   --environment {production,stg}
                         Specify the environment to use (default: production)
+  -c CONFIG, --config CONFIG
+                        Alternative path to the configuration file (note: this will override the default path and will not use environment variables)
 ```
 
 ### Production and staging environments
