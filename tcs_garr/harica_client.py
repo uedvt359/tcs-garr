@@ -472,6 +472,145 @@ class HaricaClient:
 
         return {}
 
+    def get_acme_available_domains(self, id: str) -> list[dict]:
+        """Get available domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        list[dict]
+            A list of available domains for the ACME account.
+
+        """
+        endpoint = "/api/OrganizationAdmin/GetGroupDomainsForAcme"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        return response.json()
+
+    def get_acme_domains(self, id: str) -> list[dict]:
+        """Get domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        list[dict]
+            A list of active or inactive domains for the ACME account.
+
+        """
+        endpoint = "/api/OrganizationAdmin/GetAcmeDomainsOfEntry"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        return response.json()
+
+    def acme_allow_all_domains(self, id: str) -> bool:
+        """Allow all domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/CreateAllowAcmeRulesForAllDomains"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
+    def create_acme_domain_rule(
+        self,
+        id: str,
+        domain: str,
+        subdomain: str = "",
+        allowed: bool = True,
+        applies_to_subdomains: bool = True,
+    ) -> bool:
+        """Create a domain rule for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+        domain : str
+            The domain to create.
+        subdomain : str, optional
+            The subdomain to create, by default "".
+        allowed : bool, optional
+            Whether the domain is allowed, by default True.
+        applies_to_subdomains : bool, optional
+            Whether the domain applies to subdomains, by default True.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        if not subdomain:
+            subdomain = domain
+
+        endpoint = "/api/OrganizationAdmin/CreateAcmeDomain"
+        payload = {
+            "acmeEntryId": id,
+            "baseDomain": domain,
+            "customDomain": subdomain,
+            "isAllowed": allowed,
+            "allowSubdomains": applies_to_subdomains,
+        }
+
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
+    def remove_acme_domain_rule(self, id: str) -> bool:
+        """Remove a domain rule from an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the domain rule to remove.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/DisableDomainRule"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
     def build_domains_list(self, domains):
         """
         Builds a list of domain information for the certificate request.
