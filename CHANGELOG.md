@@ -1,3 +1,9 @@
+## 0.24.0-rc.2 (2025-07-01)
+
+### Feat
+
+- add create and info acme subcommands. reviewed acme list subcommand.
+
 ## 0.24.0-rc.1 (2025-06-24)
 
 ### Fix
