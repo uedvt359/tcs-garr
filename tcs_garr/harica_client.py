@@ -364,12 +364,13 @@ class HaricaClient:
 
         return data
 
-    def list_acme_certificates(self, status: CertificateStatus = CertificateStatus.VALID):
+    def list_acme_certificates(self, id: str = None, status: CertificateStatus = CertificateStatus.VALID):
         """
         Retrieves all ACME certificates for all ACME accounts filtered by status,
         and annotates each certificate with the corresponding user.
 
         Args:
+            id (str): The ID of the ACME account to retrieve certificates for.
             status (CertificateStatus): The status of certificates to retrieve.
 
         Returns:
@@ -379,6 +380,10 @@ class HaricaClient:
         accounts = self.list_acme_accounts()
 
         for account in accounts:
+            # If an account id is provided, only retrieve certificates for that account
+            if id and id != account.get("id"):
+                continue
+
             account_id = account.get("id")
             user = account.get("userEmail")
             if not account_id:

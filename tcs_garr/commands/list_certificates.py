@@ -104,7 +104,10 @@ class ListCertificatesCommand(BaseCommand):
             nargs="?",
             const=True,
             default=None,
-            help="Export certificates to json file. Without arg uses default file, with arg specifies output file.",
+            help=(
+                "Export certificates to json file. Without arg uses default file, "
+                "with arg specifies output file (e.g. --export output.json)."
+            ),
         )
 
         # Add json flag as an alias for export
@@ -114,6 +117,21 @@ class ListCertificatesCommand(BaseCommand):
             const=True,
             default=None,
             help="Alias for --export. Export certificates to json file.",
+        )
+
+        # Add an optional flag type to filter certificates by type.
+        parser.add_argument(
+            "--type",
+            type=str,
+            choices=["ACME", "API"],
+            help="Filter certificates by type.",
+        )
+
+        # Add an optional flag to filter certificates by acme account id
+        parser.add_argument(
+            "--acme-account-id",
+            type=str,
+            help="Filter certificates by acme account id.",
         )
 
     def _normalize_certificate(self, cert):
@@ -206,6 +224,12 @@ class ListCertificatesCommand(BaseCommand):
                 if any(fqdn_filter in domain["fqdn"] for domain in cert.get("domains", []))
             ]
 
+        # Filter by type. If an acme account id is provided, skip this filter.
+        if self.args.type and not self.args.acme_account_id:
+            normalized_certificates = [
+                cert for cert in normalized_certificates if cert.get("is_acme") == (self.args.type == "ACME")
+            ]
+
         # Build recap
         recap = {"count": len(normalized_certificates)}
         for cert in normalized_certificates:
@@ -215,7 +239,7 @@ class ListCertificatesCommand(BaseCommand):
 
         return normalized_certificates, recap
 
-    def get_cn_value(self, item):
+    def _get_cn_value(self, item):
         """
         Determine the CN value for a certificate.
 
@@ -277,18 +301,25 @@ class ListCertificatesCommand(BaseCommand):
         certificates = []
 
         for status in statuses:
-            start_index = 0
-            while True:
-                response = self.harica_client.list_certificates(start_index=start_index, status=status, full_info=full_info)
+            # If an acme account id is provided, do not retrieve api certificates
+            if not self.args.acme_account_id:
+                start_index = 0
+                while True:
+                    response = self.harica_client.list_certificates(
+                        start_index=start_index, status=status, full_info=full_info
+                    )
 
-                if not response:
-                    break
+                    if not response:
+                        break
 
-                certificates.extend(response)
-                start_index += len(response)
+                    certificates.extend(response)
+                    start_index += len(response)
 
             # Add also acme certificates
-            acme_certificates = self.harica_client.list_acme_certificates(status=status)
+            acme_certificates = self.harica_client.list_acme_certificates(
+                id=self.args.acme_account_id,
+                status=status,
+            )
             certificates.extend(acme_certificates)
 
         return self._filter_certificates(certificates, statuses, username)
@@ -421,7 +452,7 @@ class ListCertificatesCommand(BaseCommand):
             # Filter certificates based on the provided date range
             if (from_date is None or expire_date <= from_date) and (to_date is None or expire_date < to_date):
                 # Determine the Common Name value
-                cn_value = self.get_cn_value(item)
+                cn_value = self._get_cn_value(item)
 
                 # Ensure all values are properly converted to strings and handle None values
                 transaction_id = str(item.get("transactionId", ""))
