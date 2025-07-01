@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from enum import Enum
 from importlib.metadata import version as get_installed_version
 
@@ -252,3 +253,27 @@ def bc_move_previous_config():
             logger.error(f"Failed to move config: {e}")
     else:
         logger.debug("No existing config file found to move.")
+
+
+def format_date_and_check_expiry(date: str) -> tuple[str, bool]:
+    """Format a iso 8601 date string and check if it has expired.
+
+    Parameters
+    ----------
+    date : str
+        Date in iso 8601 format
+
+    Returns
+    -------
+    tuple[str, bool]
+        Formatted date (%Y-%m-%d %H:%M) and a boolean indicating if it has expired
+
+    """
+    date = date.split(".")[0]  # Remove microseconds
+    formatted_date = datetime.fromisoformat(date)
+    expired = False
+
+    if formatted_date < datetime.now():
+        expired = True
+
+    return formatted_date.strftime("%Y-%m-%d %H:%M"), expired
