@@ -1,3 +1,9 @@
+## 0.24.0-rc.9 (2025-07-01)
+
+### Feat
+
+- possibility to specify alternative config file path. Closed github #5
+
 ## 0.24.0-rc.8 (2025-07-01)
 
 ### Feat
