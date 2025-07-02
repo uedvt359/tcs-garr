@@ -1,3 +1,51 @@
+## 0.24.0 (2025-07-02)
+
+## 0.23.3 (2025-06-12)
+
+### Fix
+
+- Add CA cross-signed with Harica 2015 for better compatibility
+
+## 0.23.2 (2025-06-06)
+
+### Fix
+
+- Fix proxies typo
+
+## 0.23.1 (2025-06-06)
+
+### Fix
+
+- Add badge
+
+## 0.23.1-rc.0 (2025-06-06)
+
+### Fix
+
+- Fix Slack notification provider
+
+## 0.23.0 (2025-05-30)
+
+## 0.23.0-rc.0 (2025-05-30)
+
+### Feat
+
+- Add webhook notification on certificate request
+
+## 0.22.2 (2025-05-29)
+
+### Fix
+
+- Bump dependency version
+
+## 0.22.1 (2025-05-27)
+
+### Fix
+
+- Fix ECC download issue (GitHub #7)
+
+## 0.22.0 (2025-05-07)
+
 ## 0.24.0-rc.9 (2025-07-01)
 
 ### Feat
