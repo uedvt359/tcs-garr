@@ -162,9 +162,12 @@ class BaseCommand(ABC):
         return self._harica_client
 
     @property
-    def harica_config(self):
+    def harica_config(self) -> HaricaClientConfig:
         if not self._harica_config:
-            self._harica_config = HaricaClientConfig(environment=self.args.environment)
+            self._harica_config = HaricaClientConfig(
+                environment=self.args.environment,
+                alt_config_path=self.args.config,
+            )
         return self._harica_config
 
     def check_required_role(self, client: HaricaClient):

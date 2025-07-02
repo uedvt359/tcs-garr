@@ -1,3 +1,55 @@
+## 0.24.0-rc.9 (2025-07-01)
+
+### Feat
+
+- possibility to specify alternative config file path. Closed github #5
+
+## 0.24.0-rc.8 (2025-07-01)
+
+### Feat
+
+- acme support for disable accounts
+
+## 0.24.0-rc.7 (2025-07-01)
+
+## 0.24.0-rc.6 (2025-07-01)
+
+### Feat
+
+- acme support to list available domains, list rules, add/remove rules
+
+## 0.24.0-rc.5 (2025-07-01)
+
+### Feat
+
+- helper function to format and check a date
+
+## 0.24.0-rc.4 (2025-07-01)
+
+## 0.24.0-rc.3 (2025-07-01)
+
+### Feat
+
+- list command filter by type and acme account id
+
+## 0.24.0-rc.2 (2025-07-01)
+
+### Feat
+
+- add create and info acme subcommands. reviewed acme list subcommand.
+
+## 0.24.0-rc.1 (2025-06-24)
+
+### Fix
+
+- Fix list output certificates
+
+## 0.24.0-rc.0 (2025-06-23)
+
+### Feat
+
+- Add acme list accounts and certificates
+
 ## 0.23.3 (2025-06-12)
 
 ### Fix

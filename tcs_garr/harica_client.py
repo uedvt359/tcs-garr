@@ -61,6 +61,7 @@ class HaricaClient:
         self.request_verification_token = None  # CSRF token
         self.roles = set()
         self.full_name = None
+        self.organization = None
 
         self.prepare_client(force=False)  # Prepare client on initialization
 
@@ -192,6 +193,7 @@ class HaricaClient:
         current_logged_in_user = self.get_logged_in_user_profile()
         self.roles = parse_roles(current_logged_in_user["role"])
         self.full_name = current_logged_in_user["fullName"]
+        self.organization = current_logged_in_user["organization"]
 
     def get_logged_in_user_profile(self):
         """
@@ -223,12 +225,32 @@ class HaricaClient:
             if pc.get("transactionId") == certificate_id and pc.get("transactionStatus") == pending_status.value:
                 raise CertificateNotApprovedException
 
-        res = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
+        # Step 2: Try the legacy endpoint
+        try:
+            res = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
+            if res.status_code == 404:
+                return None
 
-        if res.status_code == 404:
-            return None
+            data = res.json()
 
-        return res.json()
+            if isinstance(data, dict) and not data.get("certificate", True):
+                raise ValueError("Certificate not available via GetSSLCertificate")
+
+            return data
+        except Exception:
+            pass
+
+        # Step 3: Search ACME certificates if not available via main API
+        try:
+            for status in CertificateStatus:
+                acme_certs = self.list_acme_certificates(status=status)
+                for cert in acme_certs:
+                    if cert.get("id") == certificate_id:
+                        return cert
+        except Exception as e:
+            logger.error(f"Failed to retrieve certificate from ACME list: {e}")
+
+        return None
 
     def get_certificate_info(self, certificate_id):
         cert_info = self.__make_post_request("/api/OrganizationValidatorSSL/GetSSLCertificate", data={"id": certificate_id})
@@ -341,6 +363,277 @@ class HaricaClient:
                     cert[key] = value
 
         return data
+
+    def list_acme_certificates(self, id: str = None, status: CertificateStatus = CertificateStatus.VALID):
+        """
+        Retrieves all ACME certificates for all ACME accounts filtered by status,
+        and annotates each certificate with the corresponding user.
+
+        Args:
+            id (str): The ID of the ACME account to retrieve certificates for.
+            status (CertificateStatus): The status of certificates to retrieve.
+
+        Returns:
+            list[dict]: List of ACME certificates across all accounts filtered by status.
+        """
+        acme_certs = []
+        accounts = self.list_acme_accounts()
+
+        for account in accounts:
+            # If an account id is provided, only retrieve certificates for that account
+            if id and id != account.get("id"):
+                continue
+
+            account_id = account.get("id")
+            user = account.get("userEmail")
+            if not account_id:
+                continue
+
+            payload = {"id": account_id}
+            endpoint = "/api/OrganizationAdmin/GetAcmeCertificatesOfEntry"
+
+            try:
+                response = self.__make_post_request(endpoint, data=payload)
+                response.raise_for_status()
+                certs = response.json()
+            except Exception as e:
+                logger.error(f"Failed to get ACME certificates for account {account_id}: {e}")
+                continue
+
+            for cert in certs:
+                if cert.get("statusName") == status.value:
+                    cert["userEmail"] = user
+                    acme_certs.append(cert)
+
+        return acme_certs
+
+    def create_acme_account(self, friendly_name: str, transaction_type: str = "SSL OV"):
+        """Creates an ACME account.
+
+        Parameters
+        ----------
+        friendly_name : str
+            Friendly name for the ACME account.
+        transaction_type : str, optional
+            Transaction type, by default "SSL OV". Available options: "SSL OV", "SSL DV"
+
+        """
+
+        def get_organization_id():
+            endpoint = "/api/OrganizationAdmin/SearchGroups"
+            payload = {"key": "", "value": ""}
+            response = self.__make_post_request(endpoint, data=payload)
+            response.raise_for_status()
+
+            groups = response.json()
+            group_id = ""
+
+            for group in groups:
+                if group["alias"] == self.organization:
+                    group_id = group["id"]
+                    break
+
+            if not group_id:
+                raise Exception(f"Group for {self.organization} not found")
+
+            endpoint = "/api/OrganizationAdmin/GetOrganizationsByGroupId"
+            payload = {"id": group_id}
+            response = self.__make_post_request(endpoint, data=payload)
+            response.raise_for_status()
+
+            orgs = response.json()
+            org_id = ""
+
+            for org in orgs:
+                if org["organization"] == self.organization:
+                    org_id = org["organizationId"]
+                    break
+
+            if not org_id:
+                raise Exception(f"Organization {self.organization} not found")
+
+            return org_id
+
+        payload = {
+            "friendlyName": friendly_name,
+            "transactionType": transaction_type,
+            "id": get_organization_id(),
+        }
+        endpoint = "/api/OrganizationAdmin/CreateAcmeEntry"
+
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        accounts = self.list_acme_accounts()
+
+        for account in accounts:
+            if account["friendlyName"] == friendly_name:
+                return account
+
+        return {}
+
+    def disable_acme_account(self, id: str) -> bool:
+        """Disable an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/DisableAcmeEntry"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
+    def get_acme_available_domains(self, id: str) -> list[dict]:
+        """Get available domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        list[dict]
+            A list of available domains for the ACME account.
+
+        """
+        endpoint = "/api/OrganizationAdmin/GetGroupDomainsForAcme"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        return response.json()
+
+    def get_acme_domains(self, id: str) -> list[dict]:
+        """Get domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        list[dict]
+            A list of active or inactive domains for the ACME account.
+
+        """
+        endpoint = "/api/OrganizationAdmin/GetAcmeDomainsOfEntry"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        return response.json()
+
+    def acme_allow_all_domains(self, id: str) -> bool:
+        """Allow all domains for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/CreateAllowAcmeRulesForAllDomains"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
+    def create_acme_domain_rule(
+        self,
+        id: str,
+        domain: str,
+        subdomain: str = "",
+        allowed: bool = True,
+        applies_to_subdomains: bool = True,
+    ) -> bool:
+        """Create a domain rule for an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the ACME account.
+        domain : str
+            The domain to create.
+        subdomain : str, optional
+            The subdomain to create, by default "".
+        allowed : bool, optional
+            Whether the domain is allowed, by default True.
+        applies_to_subdomains : bool, optional
+            Whether the domain applies to subdomains, by default True.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        if not subdomain:
+            subdomain = domain
+
+        endpoint = "/api/OrganizationAdmin/CreateAcmeDomain"
+        payload = {
+            "acmeEntryId": id,
+            "baseDomain": domain,
+            "customDomain": subdomain,
+            "isAllowed": allowed,
+            "allowSubdomains": applies_to_subdomains,
+        }
+
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
+
+    def remove_acme_domain_rule(self, id: str) -> bool:
+        """Remove a domain rule from an ACME account.
+
+        Parameters
+        ----------
+        id : str
+            The ID of the domain rule to remove.
+
+        Returns
+        -------
+        bool
+            True if successful, False otherwise.
+
+        """
+        endpoint = "/api/OrganizationAdmin/DisableDomainRule"
+        payload = {"id": id}
+        response = self.__make_post_request(endpoint, data=payload)
+        response.raise_for_status()
+
+        if response.status_code != 200:
+            return False
+
+        return True
 
     def build_domains_list(self, domains):
         """
@@ -636,6 +929,16 @@ class HaricaClient:
 
         return domain_validities
 
+    def list_acme_accounts(self):
+        """
+        Retrieve the list of ACME accounts from the Harica API.
+
+        Returns:
+            list: A list of ACME account entries.
+        """
+
+        return self.__make_post_request("/api/OrganizationAdmin/GetAcmeEntries", data={"key": "", "value": ""}).json()
+
     def validate_domains(self, domains=[]):
         """
         Create a validation token for the specified domains.
@@ -686,7 +989,7 @@ class HaricaClient:
             self.__make_post_request(
                 "/api/OrganizationAdmin/CreatePrevalidatedValidation",
                 data={
-                    "usersEmail": self.get_logged_in_user_profile()["email"],  # Email of the currently logged-in user
+                    "usersEmail": self.email,
                     "validationMethodName": "3.2.2.4.7",  # Fixed validation method name
                     "organizationId": domain_id,  # ID of the domain to validate
                     "whoisEmail": "",  # Empty WHOIS email, can be customized

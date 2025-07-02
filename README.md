@@ -1,6 +1,6 @@
 # TCS-GARR Client
 
-![Version](https://img.shields.io/badge/Version-0.23.3-brightgreen.svg)
+![Version](https://img.shields.io/badge/Version-0.24.0-rc.9-brightgreen.svg)
 
 [![python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
@@ -12,17 +12,23 @@
 
 ## Overview
 
-The `TCS-GARR Client` is a command-line tool for managing and interacting with Harica
-platform. It offers features like listing, downloading, issuing certificates, approving
-requests, and generating domain validation tokens, all via the Harica API.
+**TCS-GARR Client** is a CLI tool for interacting with the HARICA platform via its API.
 
-## Warning ⚠️
+It supports operations such as:
+
+* Listing and downloading certificates
+* Requesting and approving certificates
+* Managing ACME accounts and domain validations
+* Generating domain validation tokens
+* Exporting reports and more
+
+## ⚠️ Disclaimer
 
 **Consortium GARR is not affiliated with HARICA, and the present work has not been
 endorsed by or agreed with HARICA.**
 
-**Consortium GARR provides this code to the community for sharing purposes but does not
-commit to providing support, maintenance, or further development of the code. Use it at
+**Consortium GARR provides this code as-is to the community for sharing purposes but
+does not garantee support, maintenance, or further development of the code. Use it at
 your own discretion.**
 
 ### Prerequisites
@@ -30,21 +36,21 @@ your own discretion.**
 Before using the TCS-GARR client, please ensure the following:
 
 1. **Create a local account on the Harica platform**: You must create a local account on
-   Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM
+   Harica at [https://cm.harica.gr](https://cm.harica.gr). Do not use federated IDEM/edugain
    credentials, as they do not support API access.
 
-   - If you're already logged in with an academic login, you can create a new local
+   * If you're already logged in with an academic login, you can create a new local
      account using an email alias. Academic login users do not have a password and
      therefore cannot use the API.
 
 2. **Required Roles and 2FA**: To use specific API commands, your account must have the
    appropriate roles and 2FA enabled where required. Check the [Command Roles and 2FA
-   Requirements](#command-roles-and-2fa-requirements) section for details.
+   Requirements](#-command-roles-and-2fa-requirements) section for details.
 
-   - **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
+   * **Enable 2FA (Two-Factor Authentication)** on your profile page if you need to
      perform actions such as approving certificates or managing domain validation.
 
-   - If administrative permissions are required (e.g., domain validation), request an
+   * If administrative permissions are required (e.g., domain validation), request an
      existing administrator to elevate your account.
 
 > [!CAUTION]
@@ -54,11 +60,11 @@ Before using the TCS-GARR client, please ensure the following:
 Once these steps are completed, you are ready to use the TCS-GARR client.
 
 > [!IMPORTANT]
-> ⚠️ The OTP (One-Time Password) is generated based on the date and time of your PC. If
+> 🕒 The OTP (One-Time Password) is generated based on the date and time of your PC. If
 > the client fails to authenticate and returns an "Invalid OTP" error, please ensure that
 > your device's date and time are correct and synchronized with a public NTP server.
 
-### Command Roles and 2FA Requirements
+### 🔐 Command Roles and 2FA Requirements
 
 **USER** is the default role assigned to a logged-in user with no special permissions
 and who has not been granted any additional roles by an administrator.
@@ -69,6 +75,7 @@ Other roles, apart from **USER**, require 2FA and are provided by an administrat
 | -------- | ----------------------- | ---------- |
 | approve  | SSL_ENTERPRISE_APPROVER | ✔️          |
 | cancel   | USER                    | ❌          |
+| acme     | ENTERPRISE_ADMIN        | ✔️          |
 | domains  | ENTERPRISE_ADMIN        | ✔️          |
 | download | USER                    | ❌          |
 | init     | None                    | ❌          |
@@ -80,7 +87,7 @@ Other roles, apart from **USER**, require 2FA and are provided by an administrat
 | validate | ENTERPRISE_ADMIN        | ✔️          |
 | whoami   | USER                    | ❌          |
 
-## Installation
+## 🛠 Installation
 
 You can install the TCS-GARR client in a virtual environment using `pip` or via `pipx`.
 
@@ -117,7 +124,7 @@ You can install the TCS-GARR client in a virtual environment using `pip` or via 
     PIPX_BIN_DIR=/usr/local/bin pipx install tcs-garr
     ```
 
-## Configuration
+## ⚙️ Configuration
 
 After installation, the first time you run the client, you will need to initialize the
 configuration file with your credentials by running:
@@ -146,7 +153,7 @@ tcs-garr init --force
 This will override existing parameters with new values. You can use this command to add
 or update HTTP/HTTPS proxy settings.
 
-## Usage
+## 🚀 Usage
 
 Once the setup is complete, you can use the TCS-GARR client for various operations. The
 command syntax follows this pattern:
@@ -155,25 +162,27 @@ command syntax follows this pattern:
 tcs-garr [command] [options]
 ```
 
-To view all available commands and options:
+To see all available commands and options:
 
 ```bash
 tcs-garr --help
 
-usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}] {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
+usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}]
+                {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
+  {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
                         Available commands
+    acme                List ACME accounts configured in Harica
     approve             Approve a certificate by ID
     cancel              Cancel a request by ID
     domains             List available domains
     download            Download a certificate by ID
     init                Generate Harica config file
     k8s                 Generate Kubernetes TLS resource file
-    list                Generate a report from Harica
+    list                List and filter certificates
     request             Request a new certificate
     revoke              Revoke a certificate by ID
     upgrade             Self-upgrade command for the app.
@@ -187,6 +196,8 @@ options:
   --no-check-release    Skip checking for a new release
   --environment {production,stg}
                         Specify the environment to use (default: production)
+  -c CONFIG, --config CONFIG
+                        Alternative path to the configuration file (note: this will override the default path and will not use environment variables)
 ```
 
 ### Production and staging environments
@@ -203,7 +214,7 @@ configuration file using the following command:
 tcs-garr --environment stg init
 ```
 
-### Available Commands
+### 🔧 Available Commands
 
 1. **Initialize configuration**:
 
@@ -222,15 +233,15 @@ tcs-garr --environment stg init
 
       Currently, two webhook types are supported:
 
-      - **slack**: sends a formatted message to a Slack channel.
-      - **generic**: sends a `POST` request with a JSON payload containing:
+      * **slack**: sends a formatted message to a Slack channel.
+      * **generic**: sends a `POST` request with a JSON payload containing:
 
-      ```json
-      {
-         "id": certificate_id,
-         "username": requestor
-      }
-      ```
+         ```json
+         {
+            "id": certificate_id,
+            "username": requestor
+         }
+         ```
 
    To update an existing configuration or add proxy/webhook settings:
 
@@ -255,8 +266,8 @@ tcs-garr --environment stg init
    ```bash
    tcs-garr list --help
 
-   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]]
-                     [--fqdn FQDN] [--full] [--export [EXPORT]] [--json [JSON]]
+   usage: tcs-garr list [-h] [--expired-since EXPIRED_SINCE] [--expiring-in EXPIRING_IN] [--status {Valid,Revoked,Expired,Pending,Ready,Completed,Cancelled,All}] [--user [USER]] [--fqdn FQDN]
+                        [--full] [--export [EXPORT]] [--json [JSON]] [--type {ACME,API}] [--acme-account-id ACME_ACCOUNT_ID]
 
    options:
    -h, --help            show this help message and exit
@@ -269,19 +280,21 @@ tcs-garr --environment stg init
    --user [USER]         Filter certificates owner by user. Without arg (--user only) will filter for the logged in user. Use this if you have Approver role or Admin role.
    --fqdn FQDN           Filter certificates by a substring in their Fully Qualified Domain Name (FQDN).
    --full                Retrieve full certificate information.
-   --export [EXPORT]     Export certificates to json file. Without arg uses default file, with arg specifies output file.
+   --export [EXPORT]     Export certificates to json file. Without arg uses default file, with arg specifies output file (e.g. --export output.json).
    --json [JSON]         Alias for --export. Export certificates to json file.
+   --type {ACME,API}     Filter certificates by type.
+   --acme-account-id ACME_ACCOUNT_ID   Filter certificates by acme account id.
    ```
 
-   This command will list all available certificates. You can filter them by date range
-   using the `--expired-since` and `--expiring-in` options.
+   This command will list all available certificates, included ACME ones. You can filter
+   them by date range using the `--expired-since`, `--expiring-in` or `--fqdn` options.
 
    By default, the command displays certificate information in a tabular format, showing
-   transaction ID, common name, expiration date, status, information, alternative names,
-   and requestor. When using the `--export` or `--json` option without a filename, the
-   information is displayed in JSON format on the terminal and saved to the default
-   file. With a filename specified, the data is saved to that file without terminal
-   output.
+   certificate ID, common name, expiration date, status, information, alternative names,
+   requestor and type (if requested via API or ACME) . When using the `--export` or
+   `--json` option without a filename, the information is displayed in JSON format on
+   the terminal and saved to the default file. With a filename specified, the data is
+   saved to that file without terminal output.
 
    #### Important Note on `--full` Option
 
@@ -319,6 +332,8 @@ tcs-garr --environment stg init
    Replace `ID` with the ID of the certificate you wish to download. You can use
    `pemBundle` or `certificate` as arguments for specific download formats.
 
+   The `download` command allows you to download certificates requested via API or ACME.
+
 5. **Request a new certificate**:
 
    ```bash
@@ -337,7 +352,7 @@ tcs-garr --environment stg init
                            Comma-separated alternative names (only used with --cn).
    ```
 
-   The `request` command is used to submit a new certificate request to Harica.
+   The `request` command is used to submit a new certificate request to Harica via API.
 
    You can either provide an existing Certificate Signing Request (`--csr`) or specify
    the details for generating a new CSR, including the Common Name (`--cn`) and any
@@ -459,7 +474,33 @@ tcs-garr --environment stg init
    --id ID     ID of the certificate to revoke.
    ```
 
-## Docker
+   Only certificates requested via API can be revoked. ACME certificates cannot be
+   revoked via this client.
+
+12. **Acme accounts**:
+
+   ```bash
+   usage: main.py acme [-h] {list,info,create,disable,domains} ...
+
+   positional arguments:
+   {list,info,create,disable,domains}
+      list                List all ACME accounts
+      info                Get information on a specific ACME account including secrets
+      create              Create a new ACME account
+      disable             Disable an ACME account
+      domains             Perform actions on ACME account domains and rules
+
+   options:
+   -h, --help            show this help message and exit
+   ```
+
+   This command allows you to manage ACME accounts, including listing all accounts,
+   getting information on a specific account, creating new accounts, and performing
+   actions on ACME account domains and rules. You can use the `list`, `info`, `create`,
+   `disable` and `domains` subcommands to perform these actions. Check `help` for each
+   subcommand for more details.
+
+## 🐳 Docker
 
 Docker image is available at GitHub container
 [registry](https://github.com/ConsortiumGARR/tcs-garr/pkgs/container/tcs-garr). You can
@@ -469,7 +510,7 @@ pull them via:
 docker pull ghcr.io/consortiumgarr/tcs-garr:<your_desired_version>
 ```
 
-### Build
+### 📦 Build
 
 Example of docker image build command:
 
@@ -494,7 +535,7 @@ Info about
 [webhook](https://github.com/ConsortiumGARR/tcs-garr?tab=readme-ov-file#webhook)
 environment variable.
 
-### Run
+### ▶ Run
 
 For the following commands, you can either use the builded image or pull the image from
 GitHub container

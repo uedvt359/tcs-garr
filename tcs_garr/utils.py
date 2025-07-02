@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 import sys
+from datetime import datetime
 from enum import Enum
 from importlib.metadata import version as get_installed_version
 
@@ -52,12 +53,13 @@ class HaricaClientConfig:
     Loads configuration from files or environment variables.
     """
 
-    def __init__(self, environment="production"):
+    def __init__(self, environment="production", alt_config_path=None):
         """
         Initialize the HaricaClientConfig by loading configuration for the specified environment.
 
         Args:
             environment (str): The environment to load configuration for. Defaults to "production".
+            alt_config_path (str): An optional path to an alternative configuration file.
         """
         # Set default values
         self.username = None
@@ -70,9 +72,9 @@ class HaricaClientConfig:
         self.webhook_type = None
 
         # Load configuration
-        self._load_config(environment)
+        self._load_config(environment, alt_config_path)
 
-    def _load_config(self, environment="production"):
+    def _load_config(self, environment="production", alt_config_path=None):
         """
         Load Harica configuration based on the environment.
         Includes optional HTTP and HTTPS proxy support.
@@ -89,7 +91,13 @@ class HaricaClientConfig:
 
         config_data = None
 
-        for path in settings.CONFIG_PATHS:
+        # If a custom path is provided, only use that path
+        if alt_config_path:
+            config_paths_to_check = [alt_config_path]
+        else:
+            config_paths_to_check = settings.CONFIG_PATHS
+
+        for path in config_paths_to_check:
             if os.path.exists(path):
                 config = configparser.RawConfigParser()
                 config.read(path)
@@ -105,10 +113,17 @@ class HaricaClientConfig:
                         "webhook_url": config.get(section_name, "webhook_url", fallback=None),
                         "webhook_type": config.get(section_name, "webhook_type", fallback=settings.WEBHOOK_TYPE),
                     }
+                    # Found config, no need to check further
+                    break
                 else:
                     logger.error(f"No configuration found for environment '{environment}' in {path}")
                     exit(1)
-                break
+
+        # No fallback to env variables if alt_config_path is provided and config file is
+        # not found
+        if not config_data and alt_config_path:
+            logger.error(f"Alternative config file '{alt_config_path}' not found.")
+            exit(1)
 
         # Fallback to env variables if no config file
         if config_data is None:
@@ -252,3 +267,27 @@ def bc_move_previous_config():
             logger.error(f"Failed to move config: {e}")
     else:
         logger.debug("No existing config file found to move.")
+
+
+def format_date_and_check_expiry(date: str) -> tuple[str, bool]:
+    """Format a iso 8601 date string and check if it has expired.
+
+    Parameters
+    ----------
+    date : str
+        Date in iso 8601 format
+
+    Returns
+    -------
+    tuple[str, bool]
+        Formatted date (%Y-%m-%d %H:%M) and a boolean indicating if it has expired
+
+    """
+    date = date.split(".")[0]  # Remove microseconds
+    formatted_date = datetime.fromisoformat(date)
+    expired = False
+
+    if formatted_date < datetime.now():
+        expired = True
+
+    return formatted_date.strftime("%Y-%m-%d %H:%M"), expired

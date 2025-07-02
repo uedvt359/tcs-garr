@@ -60,6 +60,17 @@ def main():
         default="production",
         help="Specify the environment to use (default: production)",
     )
+
+    parser.add_argument(
+        "-c",
+        "--config",
+        default=None,
+        help=(
+            "Alternative path to the configuration file (note: this will override the "
+            "default path and will not use environment variables)"
+        ),
+    )
+
     # Dynamically load commands
     command_instances = discover_commands(None)
 
