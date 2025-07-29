@@ -168,12 +168,12 @@ To see all available commands and options:
 tcs-garr --help
 
 usage: tcs-garr [-h] [--debug] [--version] [--no-check-release] [--environment {production,stg}]
-                {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami} ...
+                {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,test,upgrade,validate,whoami} ...
 
 Harica Certificate Manager
 
 positional arguments:
-  {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,upgrade,validate,whoami}
+  {acme,approve,cancel,domains,download,init,k8s,list,request,revoke,test,upgrade,validate,whoami}
                         Available commands
     acme                List ACME accounts configured in Harica
     approve             Approve a certificate by ID
@@ -185,6 +185,7 @@ positional arguments:
     list                List and filter certificates
     request             Request a new certificate
     revoke              Revoke a certificate by ID
+    test                Test Harica API endpoints
     upgrade             Self-upgrade command for the app.
     validate            Create validation token for domains
     whoami              Get logged in user profile
@@ -480,7 +481,7 @@ tcs-garr --environment stg init
 12. **Acme accounts**:
 
    ```bash
-   usage: main.py acme [-h] {list,info,create,disable,domains} ...
+   usage: tcs-garr acme [-h] {list,info,create,disable,domains} ...
 
    positional arguments:
    {list,info,create,disable,domains}
@@ -499,6 +500,23 @@ tcs-garr --environment stg init
    actions on ACME account domains and rules. You can use the `list`, `info`, `create`,
    `disable` and `domains` subcommands to perform these actions. Check `help` for each
    subcommand for more details.
+
+13. **Test apis**:
+
+   ```bash
+   usage: tcs-garr test [-h] --endpoint ENDPOINT [--data DATA] [--foutput FOUTPUT]
+
+   options:
+   -h, --help           show this help message and exit
+   --endpoint ENDPOINT  Endpoint to test
+   --data DATA          Data to send with the request in JSON format (e.g. '--data {"id": "f3b2a6a8-5da6-46f1-8f1d-3f9d2a6f32ec"}')
+   --foutput FOUTPUT    File to output JSON response (e.g. --foutput test.json)
+   ```
+
+   This command allows you to test Harica API endpoints. You can use the `--endpoint`
+   option to specify the endpoint you want to test. You can also use the `--data` option
+   to send data with the request in JSON format. Finally, you can use the `--foutput`
+   option to save the JSON response to a file.
 
 ## 🐳 Docker
 
