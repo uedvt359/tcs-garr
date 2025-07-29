@@ -1,3 +1,13 @@
+## 0.25.0-rc.0 (2025-07-29)
+
+### Feat
+
+- test api command
+
+### Fix
+
+- safely join url. public api_post function wrapper
+
 ## 0.24.1 (2025-07-29)
 
 ## 0.24.1-rc.0 (2025-07-29)
