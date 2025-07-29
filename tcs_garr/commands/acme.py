@@ -25,9 +25,6 @@ class AcmeAccountsCommand(BaseCommand):
         """
         Configure the argument parser for the acme command.
 
-        This method is overridden from the BaseCommand class but is not used
-        for the 'acme' command as it does not require any additional arguments.
-
         Args:
             parser: An argparse.ArgumentParser object used for parsing command-line arguments.
         """

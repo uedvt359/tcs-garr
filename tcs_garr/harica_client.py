@@ -2,6 +2,7 @@ import json
 import logging
 import time
 from threading import Lock
+from urllib.parse import urljoin
 
 import jwt
 import requests
@@ -1040,7 +1041,7 @@ class HaricaClient:
             self.session.headers.update({"Content-Type": None})
 
         # Construct the full URL for the request
-        url = f"{self.base_url}{endpoint}"
+        url = urljoin(self.base_url, endpoint)
 
         try:
             # Send the request based on the chosen method (GET or POST)
@@ -1096,6 +1097,20 @@ class HaricaClient:
             Response: The response object from the POST request.
         """
         return self.__make_api_request(endpoint, method="POST", data=data, content_type=content_type)
+
+    def api_post(self, endpoint, data={}, content_type="application/json"):
+        """
+        Helper function to make POST requests to the API.
+
+        Args:
+            endpoint (str): The API endpoint to send the POST request to.
+            data (dict, optional): The payload to send with the POST request. Defaults to an empty dictionary.
+            content_type (str, optional): The content type for the request. Defaults to "application/json".
+
+        Returns:
+            Response: The response object from the POST request.
+        """
+        return self.__make_post_request(endpoint, data=data, content_type=content_type)
 
     def has_role(self, role: UserRole) -> bool:
         """Check if the user has a specific role."""
