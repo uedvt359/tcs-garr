@@ -1,3 +1,9 @@
+## 0.24.1-rc.0 (2025-07-29)
+
+### Fix
+
+- find org id using GetOrganizationsBulk endpoint
+
 ## 0.24.0 (2025-07-02)
 
 ## 0.23.3 (2025-06-12)
