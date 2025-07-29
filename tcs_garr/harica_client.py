@@ -420,6 +420,17 @@ class HaricaClient:
         """
 
         def get_organization_id():
+            endpoint = "/api/OrganizationAdmin/GetOrganizationsBulk"
+            response = self.__make_post_request(endpoint)
+            response.raise_for_status()
+            orgs_bulk = response.json()
+
+            for org in orgs_bulk:
+                if org["organization"] == self.organization:
+                    return org["organizationId"]
+
+            # Fallback if organization not found using SearchGroups and
+            # GetOrganizationsByGroupId
             endpoint = "/api/OrganizationAdmin/SearchGroups"
             payload = {"key": "", "value": ""}
             response = self.__make_post_request(endpoint, data=payload)
