@@ -1057,7 +1057,7 @@ class HaricaClient:
                 raise ValueError("Unsupported method. Use 'GET' or 'POST'.")
 
             if response.status_code == 400 or response.status_code == 401:
-                raise PermissionError("Permission denied.")
+                raise PermissionError(response.text or "Permission denied.")
             elif response.status_code != 200:
                 logging.error(f"API request failed with status code {response.status_code}: {response.text}")
 
